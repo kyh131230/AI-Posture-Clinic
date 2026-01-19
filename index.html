@@ -1,0 +1,523 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Camera, Check, AlertTriangle, Upload, RefreshCw, Eye, HelpCircle } from 'lucide-react';
+
+// 스크립트 로드 헬퍼 함수
+const loadScript = (src) => {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) {
+      resolve();
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = src;
+    script.crossOrigin = "anonymous";
+    script.onload = () => resolve();
+    script.onerror = (e) => reject(e);
+    document.body.appendChild(script);
+  });
+};
+
+export default function App() {
+  const [frontImage, setFrontImage] = useState(null);
+  const [sideImage, setSideImage] = useState(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [results, setResults] = useState(null);
+  const [isSdkLoaded, setIsSdkLoaded] = useState(false);
+  const [poseNet, setPoseNet] = useState(null);
+
+  const frontCanvasRef = useRef(null);
+  const sideCanvasRef = useRef(null);
+
+  // MediaPipe SDK 로드
+  useEffect(() => {
+    const loadMediaPipe = async () => {
+      try {
+        await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js');
+        await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js');
+        
+        const pose = new window.Pose({
+          locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+        });
+
+        pose.setOptions({
+          modelComplexity: 1,
+          smoothLandmarks: false,
+          minDetectionConfidence: 0.5,
+          minTrackingConfidence: 0.5
+        });
+
+        setPoseNet(pose);
+        setIsSdkLoaded(true);
+      } catch (error) {
+        console.error("SDK Load Failed", error);
+      }
+    };
+    loadMediaPipe();
+  }, []);
+
+  const handleImageUpload = (e, type) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (type === 'front') setFrontImage(event.target.result);
+        else setSideImage(event.target.result);
+        setResults(null);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const drawDiagnosticLines = (ctx, landmarks, viewType) => {
+    ctx.save();
+    ctx.lineWidth = 8;
+    ctx.font = "bold 16px Arial";
+
+    if (viewType === 'side') {
+      const isLeftVisible = landmarks[11].visibility > landmarks[12].visibility;
+      const ear = isLeftVisible ? landmarks[7] : landmarks[8];
+      const shoulder = isLeftVisible ? landmarks[11] : landmarks[12];
+
+      const earX = ear.x * ctx.canvas.width;
+      const earY = ear.y * ctx.canvas.height;
+      const shoulderX = shoulder.x * ctx.canvas.width;
+      const shoulderY = shoulder.y * ctx.canvas.height;
+
+      // 기준선 (수직)
+      ctx.beginPath();
+      ctx.strokeStyle = "#3b82f6"; // Blue
+      ctx.setLineDash([5, 5]);
+      ctx.moveTo(shoulderX, shoulderY);
+      ctx.lineTo(shoulderX, earY - 40);
+      ctx.stroke();
+
+      // 실제 목 기울기
+      ctx.beginPath();
+      ctx.setLineDash([]);
+      ctx.strokeStyle = "#ef4444"; // Red
+      ctx.moveTo(shoulderX, shoulderY);
+      ctx.lineTo(earX, earY);
+      ctx.stroke();
+
+      ctx.fillStyle = "#ef4444";
+      ctx.beginPath();
+      ctx.arc(earX, earY, 8, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      ctx.fillStyle = "#3b82f6";
+      ctx.beginPath();
+      ctx.arc(shoulderX, shoulderY, 8, 0, 2 * Math.PI);
+      ctx.fill();
+    } 
+    else if (viewType === 'front') {
+      const lShoulder = landmarks[11];
+      const rShoulder = landmarks[12];
+      
+      const lx = lShoulder.x * ctx.canvas.width;
+      const ly = lShoulder.y * ctx.canvas.height;
+      const rx = rShoulder.x * ctx.canvas.width;
+      const ry = rShoulder.y * ctx.canvas.height;
+
+      ctx.beginPath();
+      ctx.strokeStyle = "#ef4444";
+      ctx.moveTo(lx, ly);
+      ctx.lineTo(rx, ry);
+      ctx.stroke();
+
+      const higherY = Math.min(ly, ry);
+      ctx.beginPath();
+      ctx.strokeStyle = "#3b82f6";
+      ctx.setLineDash([5, 5]);
+      ctx.moveTo(lx - 20, higherY);
+      ctx.lineTo(rx + 20, higherY);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  };
+
+  const analyzePosture = async () => {
+    if (!frontImage || !sideImage || !poseNet) return;
+    
+    if (!frontCanvasRef.current || !sideCanvasRef.current) {
+        alert("시스템 초기화 중입니다. 잠시 후 다시 시도해주세요.");
+        return;
+    }
+
+    setAnalyzing(true);
+    setResults(null);
+
+    if (poseNet.reset) {
+        poseNet.reset(); 
+    }
+
+    try {
+      const processImage = (imageSrc, canvasRef, viewType) => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.src = imageSrc;
+          img.onload = async () => {
+            const canvas = canvasRef.current;
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = img.width;
+            canvas.height = img.height;
+            
+            ctx.drawImage(img, 0, 0);
+
+            const onResults = (res) => {
+              if (res.poseLandmarks) {
+                window.drawConnectors(ctx, res.poseLandmarks, window.POSE_CONNECTIONS,
+                  { color: 'rgba(0, 255, 0, 0.6)', lineWidth: 4 });
+                drawDiagnosticLines(ctx, res.poseLandmarks, viewType);
+              }
+              resolve(res.poseLandmarks);
+            };
+
+            poseNet.onResults(onResults);
+            await poseNet.send({ image: img });
+          };
+        });
+      };
+
+      const frontLandmarks = await processImage(frontImage, frontCanvasRef, 'front');
+      await new Promise(r => setTimeout(r, 100)); 
+      const sideLandmarks = await processImage(sideImage, sideCanvasRef, 'side');
+
+      let diagnosis = {
+        roundedShoulder: { status: '양호', score: 0, text: '특이 사항이 발견되지 않았습니다.' },
+        turtleNeck: { status: '양호', score: 0, text: '특이 사항이 발견되지 않았습니다.' }
+      };
+
+      if (frontLandmarks) {
+        const lShoulder = frontLandmarks[11];
+        const rShoulder = frontLandmarks[12];
+        const shoulderSlope = Math.abs(lShoulder.y - rShoulder.y);
+
+        if (shoulderSlope > 0.04) {
+          diagnosis.roundedShoulder = { status: '불균형', score: 50, text: '양쪽 어깨 높이가 비대칭입니다. 척추나 골반 점검이 필요할 수 있습니다.' };
+        }
+      } else {
+        diagnosis.roundedShoulder = { status: '측정불가', score: 0, text: '정면 사진에서 인물을 찾을 수 없습니다.' };
+      }
+
+      if (sideLandmarks) {
+        const isLeftVisible = sideLandmarks[11].visibility > sideLandmarks[12].visibility;
+        const ear = isLeftVisible ? sideLandmarks[7] : sideLandmarks[8];
+        const shoulder = isLeftVisible ? sideLandmarks[11] : sideLandmarks[12];
+
+        const xDiff = Math.abs(ear.x - shoulder.x) * 100;
+        
+        if (xDiff > 5.5) {
+          diagnosis.turtleNeck = { status: '심각', score: 80, text: '귀가 어깨선보다 상당히 앞으로 나와있습니다. (심각 단계)' };
+        } else if (xDiff > 2.5) {
+          diagnosis.turtleNeck = { status: '주의', score: 40, text: '거북목 초기 증상입니다. 목이 어깨 중심보다 앞에 있습니다.' };
+        } else {
+          diagnosis.turtleNeck = { status: '양호', score: 10, text: '귀와 어깨의 수직 정렬이 양호합니다.' };
+        }
+      } else {
+        diagnosis.turtleNeck = { status: '측정불가', score: 0, text: '측면 사진에서 인물을 찾을 수 없습니다.' };
+      }
+
+      if (frontLandmarks && diagnosis.roundedShoulder.status !== '불균형' && diagnosis.roundedShoulder.status !== '측정불가') {
+        if (diagnosis.turtleNeck.status === '심각') {
+          diagnosis.roundedShoulder = { status: '주의', score: 60, text: '심한 거북목으로 인해 라운드 숄더가 동반되었을 가능성이 매우 높습니다.' };
+        } else if (diagnosis.turtleNeck.status === '주의') {
+          diagnosis.roundedShoulder = { status: '관찰 필요', score: 30, text: '거북목으로 인해 어깨가 안으로 말리기 시작했을 수 있습니다.' };
+        } else {
+          diagnosis.roundedShoulder = { status: '양호', score: 10, text: '정면 어깨 높낮이가 안정적입니다.' };
+        }
+      }
+
+      setResults(diagnosis);
+
+    } catch (error) {
+      console.error("Analysis Error", error);
+      alert("분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  const reset = () => {
+    setFrontImage(null);
+    setSideImage(null);
+    setResults(null);
+    
+    if (frontCanvasRef.current) {
+        const ctx = frontCanvasRef.current.getContext('2d');
+        ctx.clearRect(0, 0, frontCanvasRef.current.width, frontCanvasRef.current.height);
+    }
+    if (sideCanvasRef.current) {
+        const ctx = sideCanvasRef.current.getContext('2d');
+        ctx.clearRect(0, 0, sideCanvasRef.current.width, sideCanvasRef.current.height);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case '양호': return 'bg-green-500';
+      case '주의': return 'bg-yellow-500';
+      case '관찰 필요': return 'bg-orange-400';
+      case '심각': return 'bg-red-500';
+      case '불균형': return 'bg-red-500';
+      default: return 'bg-slate-300';
+    }
+  };
+  
+  const getBadgeStyle = (status) => {
+    switch (status) {
+      case '양호': return 'bg-green-100 text-green-700';
+      case '주의': return 'bg-yellow-100 text-yellow-700';
+      case '관찰 필요': return 'bg-orange-100 text-orange-700';
+      case '심각': return 'bg-red-100 text-red-700';
+      case '불균형': return 'bg-red-100 text-red-700';
+      default: return 'bg-slate-100 text-slate-500';
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 pb-12 font-sans text-slate-900">
+      <header className="bg-white shadow-sm sticky top-0 z-10">
+        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="bg-teal-600 p-2 rounded-lg text-white">
+              <Camera size={20} />
+            </div>
+            <h1 className="text-xl font-bold tracking-tight">AI Posture Clinic</h1>
+          </div>
+          <span className="text-xs font-bold bg-teal-50 text-teal-700 px-3 py-1 rounded-full border border-teal-100">
+            v1.6 (Example Guide)
+          </span>
+        </div>
+      </header>
+
+      <main className="max-w-3xl mx-auto px-4 mt-8">
+        
+        <div className={!results ? "hidden" : "grid grid-cols-2 gap-4 mb-8"}>
+            <div className="relative">
+                <span className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">정면 분석</span>
+                <canvas ref={frontCanvasRef} className="w-full h-auto rounded-lg border border-slate-200 bg-black" />
+            </div>
+            <div className="relative">
+                <span className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">측면 분석</span>
+                <canvas ref={sideCanvasRef} className="w-full h-auto rounded-lg border border-slate-200 bg-black" />
+            </div>
+        </div>
+
+        {!isSdkLoaded && (
+          <div className="text-center py-4 bg-yellow-50 text-yellow-800 rounded-lg mb-6 text-sm">
+            AI 엔진을 초기화하고 있습니다...
+          </div>
+        )}
+
+        {!results ? (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="text-center space-y-3">
+              <h2 className="text-3xl font-extrabold text-slate-900">
+                AI 체형 분석 <span className="text-teal-600">솔루션</span>
+              </h2>
+              <p className="text-slate-500 max-w-md mx-auto leading-relaxed">
+                전문 장비 없이 사진 두 장으로<br/>
+                거북목과 라운드 숄더 위험도를 확인하세요.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Front Upload with Example Image */}
+              <div className={`relative border-2 border-dashed rounded-2xl p-6 h-72 flex flex-col items-center justify-center transition-all duration-300 overflow-hidden ${frontImage ? 'border-teal-500 bg-teal-50/30' : 'border-slate-300 hover:border-teal-400 hover:bg-white bg-slate-50'}`}>
+                {frontImage ? (
+                  <div className="relative w-full h-full group z-10">
+                    <img src={frontImage} className="w-full h-full object-contain rounded-lg" alt="Front Preview" />
+                    <button onClick={() => setFrontImage(null)} className="absolute top-2 right-2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors">
+                      <RefreshCw size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="cursor-pointer w-full h-full flex flex-col items-center justify-center group relative z-10">
+                    {/* Example Image Background */}
+                    <img 
+                        src="front.jpg" 
+                        alt="정면 촬영 예시" 
+                        className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-20 transition-opacity pointer-events-none"
+                        onError={(e) => e.target.style.display = 'none'} 
+                    />
+                    
+                    <div className="bg-white/80 p-4 rounded-xl backdrop-blur-sm shadow-sm flex flex-col items-center">
+                        <div className="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <Upload className="text-teal-600" size={24} />
+                        </div>
+                        <span className="font-bold text-slate-700">정면 사진 (Front)</span>
+                        <span className="text-xs text-slate-500 mt-2 text-center">예시처럼 차렷 자세로<br/>전신 또는 상반신 촬영</span>
+                    </div>
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, 'front')} />
+                  </label>
+                )}
+              </div>
+
+              {/* Side Upload with Example Image */}
+              <div className={`relative border-2 border-dashed rounded-2xl p-6 h-72 flex flex-col items-center justify-center transition-all duration-300 overflow-hidden ${sideImage ? 'border-teal-500 bg-teal-50/30' : 'border-slate-300 hover:border-teal-400 hover:bg-white bg-slate-50'}`}>
+                {sideImage ? (
+                  <div className="relative w-full h-full group z-10">
+                    <img src={sideImage} className="w-full h-full object-contain rounded-lg" alt="Side Preview" />
+                    <button onClick={() => setSideImage(null)} className="absolute top-2 right-2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors">
+                      <RefreshCw size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="cursor-pointer w-full h-full flex flex-col items-center justify-center group relative z-10">
+                    {/* Example Image Background */}
+                    <img 
+                        src="side.jpg" 
+                        alt="측면 촬영 예시" 
+                        className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-20 transition-opacity pointer-events-none"
+                        onError={(e) => e.target.style.display = 'none'} 
+                    />
+
+                    <div className="bg-white/80 p-4 rounded-xl backdrop-blur-sm shadow-sm flex flex-col items-center">
+                        <div className="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <Upload className="text-teal-600" size={24} />
+                        </div>
+                        <span className="font-bold text-slate-700">측면 사진 (Side)</span>
+                        <span className="text-xs text-slate-500 mt-2 text-center">귀와 어깨 라인이<br/>잘 보이도록 측면 촬영</span>
+                    </div>
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, 'side')} />
+                  </label>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-center pt-2">
+              <button 
+                onClick={analyzePosture}
+                disabled={!frontImage || !sideImage || analyzing || !isSdkLoaded}
+                className={`w-full md:w-auto px-10 py-4 rounded-xl font-bold text-lg shadow-xl shadow-teal-100 transition-all transform active:scale-95 ${
+                  frontImage && sideImage && !analyzing && isSdkLoaded
+                  ? 'bg-teal-600 hover:bg-teal-700 text-white'
+                  : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                }`}
+              >
+                {analyzing ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span>AI 분석 진행 중...</span>
+                  </div>
+                ) : !isSdkLoaded ? "AI 엔진 로딩 중..." : "체형 분석 시작하기"}
+              </button>
+            </div>
+            
+            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                <div className="flex items-start gap-3">
+                    <AlertTriangle className="text-yellow-500 shrink-0 mt-0.5" size={18} />
+                    <div className="text-xs text-slate-500 leading-relaxed">
+                        <strong className="text-slate-700 block mb-1">촬영 가이드</strong>
+                        정확한 분석을 위해 헐렁한 옷보다는 <strong>몸의 라인이 드러나는 옷</strong>을 입고 촬영해주세요.
+                        카메라는 눈높이에서 수평을 유지해야 가장 정확합니다.
+                    </div>
+                </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-500">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-slate-900">분석 완료</h2>
+              <p className="text-slate-500 text-sm">상단의 시각화 이미지를 통해 분석 기준을 확인하세요.</p>
+            </div>
+
+            <div className="grid gap-6">
+              
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 overflow-hidden relative">
+                <div className={`absolute top-0 left-0 w-2 h-full ${getStatusColor(results.roundedShoulder.status)}`}></div>
+                
+                <div className="pl-4">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 className="text-lg font-bold text-slate-800">라운드 숄더 (Shoulders)</h3>
+                        <p className="text-sm text-slate-500">어깨 말림 및 비대칭 분석</p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-sm font-bold ${getBadgeStyle(results.roundedShoulder.status)}`}>
+                        {results.roundedShoulder.status}
+                    </span>
+                  </div>
+                  
+                  <p className="text-slate-700 mb-6 font-medium bg-slate-50 p-3 rounded-lg">
+                    {results.roundedShoulder.text}
+                  </p>
+                  
+                  {results.roundedShoulder.status !== '양호' && results.roundedShoulder.status !== '측정불가' && (
+                    <div className="space-y-3">
+                        <h4 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                            <Check size={16} className="text-teal-600"/> 헬스장 추천 솔루션
+                        </h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="bg-slate-50 p-3 rounded-lg text-sm border border-slate-100">
+                                <strong className="block text-slate-800 mb-1">페이스 풀 (Face Pull)</strong>
+                                케이블을 얼굴로 당겨 등 상부와 말린 어깨를 직접적으로 교정합니다.
+                            </div>
+                            <div className="bg-slate-50 p-3 rounded-lg text-sm border border-slate-100">
+                                <strong className="block text-slate-800 mb-1">숄더 프레스 (Shoulder Press)</strong>
+                                어깨 전반적인 근력을 강화하여 바른 자세 유지력을 높입니다.
+                            </div>
+                        </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 overflow-hidden relative">
+                <div className={`absolute top-0 left-0 w-2 h-full ${getStatusColor(results.turtleNeck.status)}`}></div>
+                
+                <div className="pl-4">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                            거북목 (Forward Head)
+                            <Eye size={16} className="text-slate-400" />
+                        </h3>
+                        <p className="text-sm text-slate-500">파란 점선(어깨 수직)과 빨간 선(실제 목) 비교</p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-sm font-bold ${getBadgeStyle(results.turtleNeck.status)}`}>
+                        {results.turtleNeck.status}
+                    </span>
+                  </div>
+                  
+                  <p className="text-slate-700 mb-6 font-medium bg-slate-50 p-3 rounded-lg">
+                    {results.turtleNeck.text}
+                  </p>
+                  
+                  {results.turtleNeck.status !== '양호' && results.turtleNeck.status !== '측정불가' && (
+                    <div className="space-y-3">
+                        <h4 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                            <Check size={16} className="text-teal-600"/> 헬스장 추천 솔루션
+                        </h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="bg-slate-50 p-3 rounded-lg text-sm border border-slate-100">
+                                <strong className="block text-slate-800 mb-1">목 펴기 (Neck Extension)</strong>
+                                머신이나 밴드를 이용해 고개를 뒤로 젖혀 경추 커브를 회복합니다.
+                            </div>
+                            <div className="bg-slate-50 p-3 rounded-lg text-sm border border-slate-100">
+                                <strong className="block text-slate-800 mb-1">업 라이트 로우 (Upright Row)</strong>
+                                승모근과 어깨 주변 근육을 강화하여 머리 무게를 지탱합니다.
+                            </div>
+                        </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+            </div>
+
+            <button onClick={reset} className="w-full bg-slate-800 text-white py-4 rounded-xl font-bold hover:bg-slate-900 transition-colors shadow-lg flex items-center justify-center gap-2">
+                <RefreshCw size={20} />
+                다른 사진으로 다시 분석하기
+            </button>
+          </div>
+        )}
+      </main>
+      
+      <footer className="mt-12 text-center text-slate-400 text-sm pb-8">
+        &copy; 2024 AI Posture Clinic. Powered by MediaPipe & React.
+      </footer>
+    </div>
+  );
+}
