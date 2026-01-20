@@ -306,9 +306,14 @@
         const videoFrame = document.getElementById('video-frame');
         const videoTitle = document.getElementById('video-title');
 
+        // [수정] 뒤로가기 트랩을 페이지 로드 즉시 실행 (DOM 생성 직후)
+        document.addEventListener('DOMContentLoaded', () => {
+            initBackKeyTrap();
+        });
+
         // 1. 초기화 및 MediaPipe 로드
         window.onload = async () => {
-            initBackKeyTrap(); // 뒤로가기 트랩 초기화
+            // initBackKeyTrap(); // [제거] 로딩 완료 후 실행하면 너무 늦음
 
             try {
                 const pose = new Pose({locateFile: (file) => {
@@ -335,12 +340,15 @@
         // ===== [중요] 모바일 뒤로가기 제어 로직 =====
         function initBackKeyTrap() {
             const pushHistory = () => {
+                // 이미 트랩 상태라면 중복 실행 방지
                 if (history.state && history.state.page === 'trap') return;
                 window.history.pushState({ page: 'trap' }, document.title, window.location.href);
             };
 
+            // 1. 함수 실행 즉시 히스토리 푸시 시도
             pushHistory();
 
+            // 2. 사용자 인터랙션 시 히스토리 푸시 (브라우저 정책 우회)
             const activeEvents = ['click', 'touchstart', 'scroll'];
             activeEvents.forEach(evt => {
                 window.addEventListener(evt, () => {
@@ -348,9 +356,14 @@
                 }, { once: true, passive: true });
             });
 
+            // 3. 뒤로가기 감지
             window.onpopstate = function(event) {
+                // 모달이 아직 안 떴다면
                 if (!hasShownExitModal) {
+                    // 뒤로가기를 막기 위해 다시 현재 상태를 push
                     window.history.pushState({ page: 'trap' }, document.title, window.location.href);
+                    
+                    // 모달 표시
                     showModal();
                 }
             };
