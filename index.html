@@ -202,10 +202,10 @@
         &copy; 2026 남양주도시공사 전략기획부.
     </footer>
 
-    <!-- 설문조사 플로팅 버튼 -->
-    <button onclick="goToSurvey()" class="fixed bottom-6 right-6 bg-slate-900 hover:bg-teal-600 text-white p-4 rounded-full shadow-2xl transition-all z-40 flex items-center gap-2 group">
+    <!-- 설문조사 플로팅 버튼 (수정됨: 고정형 알약 디자인) -->
+    <button onclick="goToSurvey()" class="fixed bottom-6 right-6 bg-slate-900 hover:bg-teal-600 text-white px-5 py-3 rounded-full shadow-2xl transition-all z-40 flex items-center gap-2 group border border-white/10">
         <i class="ph ph-clipboard-text text-xl"></i>
-        <span class="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 whitespace-nowrap text-sm font-bold">설문조사 참여</span>
+        <span class="font-bold text-sm whitespace-nowrap">만족도 조사</span>
     </button>
 
     <!-- 이탈 감지 모달 (뒤로가기 시 표시) -->
@@ -432,6 +432,11 @@
         // AI 분석 실행
         analyzeBtn.addEventListener('click', async () => {
             if (!frontImgData || !sideImgData || !poseNet) return;
+
+            // [핵심] 분석 시작(결과 페이지 진입) 시 히스토리를 한 번 더 쌓음
+            // 이렇게 하면 사용자가 "분석 시작" 버튼을 누른 것이 "새 페이지 진입"처럼 처리되어
+            // 뒤로가기 버튼을 눌렀을 때 앱이 종료되지 않고 popstate 이벤트가 발생함.
+            history.pushState({ page: 'result' }, document.title, window.location.href);
 
             analyzeBtn.disabled = true;
             analyzeBtn.innerHTML = '<div class="flex items-center justify-center space-x-2"><div class="spinner border-2 w-5 h-5"></div><span>정밀 분석 중...</span></div>';
