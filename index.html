@@ -29,8 +29,9 @@
         @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         
         .modal-backdrop {
-            background-color: rgba(0, 0, 0, 0.6);
+            background-color: rgba(0, 0, 0, 0.75);
             backdrop-filter: blur(4px);
+            z-index: 100;
         }
         
         /* 스피너 */
@@ -43,6 +44,25 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* 유튜브 반응형 컨테이너 */
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 비율 */
+            height: 0;
+            overflow: hidden;
+            border-radius: 0.75rem;
+            background: #000;
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .cursor-pointer { cursor: pointer; }
     </style>
 </head>
 <body>
@@ -54,7 +74,7 @@
                 <div class="bg-teal-600 p-2 rounded-lg text-white"><i class="ph ph-camera text-xl"></i></div>
                 <h1 class="text-xl font-bold tracking-tight text-slate-900">AI Posture Clinic</h1>
             </div>
-            <span class="text-xs font-bold bg-teal-50 text-teal-700 px-3 py-1 rounded-full border border-teal-100">Version 1.0</span>
+            <span class="text-xs font-bold bg-teal-50 text-teal-700 px-3 py-1 rounded-full border border-teal-100">Pro 3.12</span>
         </div>
     </header>
 
@@ -63,10 +83,9 @@
         <!-- 1. 업로드 화면 (기본 표시) -->
         <div id="upload-view" class="space-y-8 fade-in">
             <div class="text-center space-y-3">
-                <h2 class="text-3xl font-extrabold text-slate-900">AI 기반 체형 분석 <span class="text-teal-600"><br/>운동 프로그램 솔루션</span></h2>
-                <p class="text-slate-500 max-w-md mx-auto leading-relaxed">사진 두 장으로 거북목과 라운드 숄더<br/>위험도를 확인하고 운동을 추천 받아보세요.</p>
-		<p class="text-slate-500 max-w-md mx-auto leading-relaxed">📢 <strong>안심하세요 📢<br/>업로드한 사진은 개인 정보 보호를 위해,<br/>절대 재활용하거나 저장하지 않습니다.</strong></p>
-
+                <h2 class="text-3xl font-extrabold text-slate-900">AI 정밀 체형 분석 <span class="text-teal-600"><br/>운동 프로그램 솔루션</span></h2>
+                <p class="text-slate-500 max-w-md mx-auto leading-relaxed">각도 기반 정밀 알고리즘으로<br/>거북목과 어깨 불균형을 진단합니다.</p>
+                <p class="text-xs text-slate-400">📢 업로드된 사진은 분석 후 즉시 삭제되며 저장되지 않습니다.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 justify-items-center">
@@ -79,11 +98,12 @@
                         
                         <!-- 초기 안내 화면 -->
                         <div id="front-placeholder" class="flex flex-col items-center w-full h-full relative z-0">
+                            <!-- front.jpg가 없으면 숨김 -->
                             <img src="front.jpg" class="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none" onerror="this.style.display='none'">
                             <div class="z-10 flex flex-col items-center justify-center h-full gap-4 w-full">
                                 <div class="text-center bg-white/80 p-3 rounded-xl backdrop-blur-sm shadow-sm w-full">
                                     <span class="font-bold text-slate-700 block">정면 사진</span>
-                                    <span class="text-xs text-slate-500">전신이 보이게<br/>차렷 자세</span>
+                                    <span class="text-xs text-slate-500">어깨 라인이 보이게<br/>차렷 자세</span>
                                 </div>
                                 <div class="flex flex-col gap-2 w-full px-4">
                                     <label class="cursor-pointer bg-teal-600 text-white py-3 rounded-xl text-sm font-bold shadow-md hover:bg-teal-700 transition-colors text-center flex items-center justify-center gap-2">
@@ -111,7 +131,7 @@
                             <div class="z-10 flex flex-col items-center justify-center h-full gap-4 w-full">
                                 <div class="text-center bg-white/80 p-3 rounded-xl backdrop-blur-sm shadow-sm w-full">
                                     <span class="font-bold text-slate-700 block">측면 사진</span>
-                                    <span class="text-xs text-slate-500">전신이 보이게<br/>귀/어깨 노출</span>
+                                    <span class="text-xs text-slate-500">귀와 어깨가<br/>잘 보이도록 촬영</span>
                                 </div>
                                 <div class="flex flex-col gap-2 w-full px-4">
                                     <label class="cursor-pointer bg-teal-600 text-white py-3 rounded-xl text-sm font-bold shadow-md hover:bg-teal-700 transition-colors text-center flex items-center justify-center gap-2">
@@ -137,11 +157,10 @@
             
             <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
                 <div class="flex items-start gap-3">
-                    <i class="ph ph-warning text-yellow-500 text-xl mt-0.5"></i>
+                    <i class="ph ph-info text-teal-600 text-xl mt-0.5"></i>
                     <div class="text-xs text-slate-500 leading-relaxed">
-                        <strong class="text-slate-700 block mb-1">촬영 가이드</strong>
-                        정확한 분석을 위해 헐렁한 옷보다는 <strong>몸의 라인이 잘 보이는 옷</strong>을 입고 촬영해주세요.
-                        모바일에서는 '사진 업로드' 버튼을 누르면 카메라 또는 갤러리를 선택할 수 있습니다.
+                        <strong class="text-slate-700 block mb-1">정확한 분석을 위한 팁</strong>
+                        카메라를 눈높이에 두고 수평을 맞춰 찍으면 가장 정확합니다. 몸에 딱 붙는 옷을 입으시면 더 좋습니다.
                     </div>
                 </div>
             </div>
@@ -151,17 +170,18 @@
         <div id="result-view" class="space-y-8 hidden fade-in">
             <div class="text-center space-y-2">
                 <h2 class="text-2xl font-bold text-slate-900">분석 완료</h2>
-                <p class="text-slate-500 text-sm">AI가 분석한 체형 결과입니다.</p>
+                <p class="text-slate-500 text-sm">각도 분석을 통해 진단된 결과입니다.</p>
+                <p class="text-xs text-teal-600 font-bold bg-teal-50 inline-block px-3 py-1 rounded-full">👇 아래 운동 카드를 누르면 상세 가이드 영상이 재생됩니다.</p>
             </div>
 
             <!-- 캔버스 (결과 시각화) -->
             <div class="grid grid-cols-2 gap-4 mb-8">
                 <div class="relative">
-                    <span class="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">정면 분석</span>
+                    <span class="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-md">정면 (어깨 균형)</span>
                     <canvas id="front-canvas" class="w-full h-auto rounded-lg border border-slate-200 bg-black"></canvas>
                 </div>
                 <div class="relative">
-                    <span class="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">측면 분석</span>
+                    <span class="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-md">측면 (목 각도)</span>
                     <canvas id="side-canvas" class="w-full h-auto rounded-lg border border-slate-200 bg-black"></canvas>
                 </div>
             </div>
@@ -215,9 +235,57 @@
         </div>
     </div>
 
+    <!-- 비디오 모달 -->
+    <div id="video-modal" class="fixed inset-0 z-[60] modal-backdrop flex items-center justify-center p-4 hidden">
+        <div class="bg-black w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl relative">
+            <div class="p-4 flex justify-between items-center text-white bg-gray-900">
+                <h3 id="video-title" class="font-bold text-lg">운동 가이드</h3>
+                <button onclick="closeVideoModal()" class="text-gray-300 hover:text-white">
+                    <i class="ph ph-x text-2xl"></i>
+                </button>
+            </div>
+            <div class="video-container">
+                <iframe id="video-frame" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript 로직 -->
     <script>
-        const SURVEY_URL = "https://naver.me/FTMiqIuh"; // 설문조사 링크 수정 필요
+        const SURVEY_URL = "https://naver.me/FTMiqIuh"; 
+        
+        // [업데이트] 운동 데이터 (상세 루틴 추가됨)
+        const EXERCISE_DATA = {
+            "페이스 풀": {
+                id: "90V84gRS2_Y", // 유튜브 ID
+                desc: "케이블을 눈높이로 당겨 등 상부를 수축합니다.",
+                set: "3세트",
+                count: "15회",
+                rest: "1분 휴식"
+            },
+            "숄더 프레스": {
+                id: "qEwKCR5JCog",
+                desc: "팔꿈치가 직각이 되도록 내렸다가 머리 위로 쭉 밀어 올립니다.",
+                set: "3세트",
+                count: "12회",
+                rest: "90초 휴식"
+            },
+            "목 펴기": {
+                id: "wQylqaCl8Zo",
+                desc: "가슴을 펴고 턱을 당긴 채, 머리를 천천히 뒤로 젖혀 5초간 유지합니다.",
+                set: "3세트",
+                count: "10회",
+                rest: "30초 휴식"
+            },
+            "업 라이트 로우": {
+                id: "amcu-8CUSQw",
+                desc: "바를 몸에 스치듯 턱 밑까지 당겨 올립니다. 팔꿈치가 손보다 높게 유지하세요.",
+                set: "3세트",
+                count: "12회",
+                rest: "1분 휴식"
+            }
+        };
+
         let poseNet = null;
         let isSdkLoaded = false;
         let frontImgData = null;
@@ -239,6 +307,9 @@
         const resultCards = document.getElementById('result-cards');
         const resetAllBtn = document.getElementById('reset-all-btn');
         const exitModal = document.getElementById('exit-modal');
+        const videoModal = document.getElementById('video-modal');
+        const videoFrame = document.getElementById('video-frame');
+        const videoTitle = document.getElementById('video-title');
 
         // 1. 초기화 및 MediaPipe 로드
         window.onload = async () => {
@@ -249,7 +320,7 @@
                 
                 pose.setOptions({
                     modelComplexity: 1,
-                    smoothLandmarks: false, // 정적 이미지 모드
+                    smoothLandmarks: false,
                     minDetectionConfidence: 0.5,
                     minTrackingConfidence: 0.5
                 });
@@ -257,8 +328,6 @@
                 poseNet = pose;
                 isSdkLoaded = true;
                 updateAnalyzeButton();
-                
-                // 이탈 감지 초기화
                 initExitIntent();
 
             } catch (error) {
@@ -267,7 +336,7 @@
             }
         };
 
-        // 2. 이미지 업로드 처리
+        // 2. 이미지 처리 함수들
         function handleFile(input, preview, placeholder, resetBtn, type) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
@@ -289,7 +358,6 @@
         frontInput.addEventListener('change', () => handleFile(frontInput, frontPreview, frontPlaceholder, frontResetBtn, 'front'));
         sideInput.addEventListener('change', () => handleFile(sideInput, sidePreview, sidePlaceholder, sideResetBtn, 'side'));
 
-        // 3. 리셋 버튼 (개별)
         frontResetBtn.addEventListener('click', () => {
             frontInput.value = '';
             frontImgData = null;
@@ -310,7 +378,6 @@
             updateAnalyzeButton();
         });
 
-        // 4. 분석 버튼 상태 업데이트
         function updateAnalyzeButton() {
             if (!isSdkLoaded) {
                 analyzeBtn.textContent = "AI 엔진 로딩 중...";
@@ -327,30 +394,22 @@
             }
         }
 
-        // 5. AI 분석 실행
+        // AI 분석 실행
         analyzeBtn.addEventListener('click', async () => {
             if (!frontImgData || !sideImgData || !poseNet) return;
 
-            // 로딩 UI
             analyzeBtn.disabled = true;
-            analyzeBtn.innerHTML = '<div class="flex items-center justify-center space-x-2"><div class="spinner border-2 w-5 h-5"></div><span>분석 중...</span></div>';
+            analyzeBtn.innerHTML = '<div class="flex items-center justify-center space-x-2"><div class="spinner border-2 w-5 h-5"></div><span>정밀 분석 중...</span></div>';
 
             try {
-                // Front Process
                 const frontCanvas = document.getElementById('front-canvas');
                 const frontRes = await processImage(frontImgData, frontCanvas, 'front');
-                
-                // Side Process
                 const sideCanvas = document.getElementById('side-canvas');
                 const sideRes = await processImage(sideImgData, sideCanvas, 'side');
 
-                // 결과 계산
                 const diagnosis = calculateDiagnosis(frontRes, sideRes);
-                
-                // 결과 표시
                 displayResults(diagnosis);
                 
-                // 뷰 전환
                 uploadView.classList.add('hidden');
                 resultView.classList.remove('hidden');
                 
@@ -372,49 +431,54 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0);
 
-                    // 일회성 리스너 등록
                     const onResults = (res) => {
                         if (res.poseLandmarks) {
-                            // 뼈대 그리기
-                            drawConnectors(ctx, res.poseLandmarks, POSE_CONNECTIONS, {color: 'rgba(0, 255, 0, 0.6)', lineWidth: 4});
+                            drawConnectors(ctx, res.poseLandmarks, POSE_CONNECTIONS, {color: 'rgba(0, 255, 0, 0.5)', lineWidth: 4});
                             drawDiagnosticLines(ctx, res.poseLandmarks, type);
                         }
                         resolve(res.poseLandmarks);
                     };
-
-                    // PoseNet 설정 및 전송
-                    // 주의: 단일 이미지 처리를 위해 reset() 호출 권장되나 JS 버전에서는 직접 전송
                     poseNet.onResults(onResults);
                     await poseNet.send({image: img});
                 };
             });
         }
 
+        function calculateAngle(p1, p2) {
+            const dx = Math.abs(p1.x - p2.x);
+            const dy = Math.abs(p1.y - p2.y);
+            const theta = Math.atan2(dx, dy); 
+            const degree = theta * (180 / Math.PI);
+            return degree;
+        }
+
+        function calculateShoulderSlope(p1, p2) {
+            const dy = Math.abs(p1.y - p2.y);
+            const dx = Math.abs(p1.x - p2.x);
+            const theta = Math.atan2(dy, dx);
+            return theta * (180 / Math.PI);
+        }
+
         function drawDiagnosticLines(ctx, landmarks, type) {
             ctx.save();
             ctx.lineWidth = 8;
-            ctx.font = "bold 16px Arial";
+            ctx.font = "bold 20px Arial";
 
             if (type === 'side') {
-                const ear = landmarks[7]; // Left Ear (간단히 왼쪽 기준)
-                const shoulder = landmarks[11]; // Left Shoulder
-                
-                // 가시성 체크하여 더 잘 보이는 쪽 선택 가능
-                // 여기서는 생략하고 왼쪽 기준 예시
+                const ear = landmarks[7]; 
+                const shoulder = landmarks[11];
                 const ex = ear.x * ctx.canvas.width;
                 const ey = ear.y * ctx.canvas.height;
                 const sx = shoulder.x * ctx.canvas.width;
                 const sy = shoulder.y * ctx.canvas.height;
 
-                // 수직선 (Blue)
                 ctx.beginPath();
                 ctx.strokeStyle = "#3b82f6";
                 ctx.setLineDash([5, 5]);
                 ctx.moveTo(sx, sy);
-                ctx.lineTo(sx, ey - 50);
+                ctx.lineTo(sx, ey - 60);
                 ctx.stroke();
 
-                // 실제 기울기 (Red)
                 ctx.beginPath();
                 ctx.setLineDash([]);
                 ctx.strokeStyle = "#ef4444";
@@ -422,17 +486,14 @@
                 ctx.lineTo(ex, ey);
                 ctx.stroke();
                 
-                // 점
                 ctx.fillStyle = "#ef4444";
-                ctx.beginPath(); ctx.arc(ex, ey, 8, 0, 2*Math.PI); ctx.fill();
+                ctx.beginPath(); ctx.arc(ex, ey, 10, 0, 2*Math.PI); ctx.fill();
                 ctx.fillStyle = "#3b82f6";
-                ctx.beginPath(); ctx.arc(sx, sy, 8, 0, 2*Math.PI); ctx.fill();
+                ctx.beginPath(); ctx.arc(sx, sy, 10, 0, 2*Math.PI); ctx.fill();
 
             } else {
-                // Front: Shoulder levels
                 const l = landmarks[11];
                 const r = landmarks[12];
-                
                 const lx = l.x * ctx.canvas.width;
                 const ly = l.y * ctx.canvas.height;
                 const rx = r.x * ctx.canvas.width;
@@ -440,8 +501,17 @@
 
                 ctx.beginPath();
                 ctx.strokeStyle = "#ef4444";
+                ctx.setLineDash([]);
                 ctx.moveTo(lx, ly);
                 ctx.lineTo(rx, ry);
+                ctx.stroke();
+
+                const highY = Math.min(ly, ry);
+                ctx.beginPath();
+                ctx.strokeStyle = "#3b82f6";
+                ctx.setLineDash([5, 5]);
+                ctx.moveTo(lx - 20, highY);
+                ctx.lineTo(rx + 20, highY);
                 ctx.stroke();
             }
             ctx.restore();
@@ -449,78 +519,108 @@
 
         function calculateDiagnosis(front, side) {
             let result = {
-                rounded: { status: '양호', text: '정면 어깨 균형이 양호합니다.' },
-                turtle: { status: '양호', text: '측면 목 정렬이 양호합니다.' }
+                rounded: { status: '양호', text: '정면 어깨 균형이 안정적입니다.' },
+                turtle: { status: '양호', text: '측면 목 정렬이 바릅니다.' }
             };
 
-            // 거북목 (Side)
             if (side) {
-                const ear = side[7].visibility > side[8].visibility ? side[7] : side[8];
-                const shoulder = side[11].visibility > side[12].visibility ? side[11] : side[12];
-                const diff = Math.abs(ear.x - shoulder.x) * 100;
+                const isLeft = side[11].visibility > side[12].visibility;
+                const shoulder = isLeft ? side[11] : side[12];
+                const ear = isLeft ? side[7] : side[8];
+                const angle = calculateAngle(ear, shoulder);
                 
-                if (diff > 5.5) result.turtle = { status: '심각', text: '귀가 어깨보다 많이 앞으로 나와있습니다.' };
-                else if (diff > 2.5) result.turtle = { status: '주의', text: '거북목 초기 증상이 보입니다.' };
+                if (angle > 40) {
+                    result.turtle = { status: '심각', text: `목이 수직 기준 ${angle.toFixed(1)}도 앞으로 굽어있습니다.` };
+                } else if (angle > 20) {
+                    result.turtle = { status: '주의', text: `목이 수직 기준 ${angle.toFixed(1)}도 기울어져 있습니다.` };
+                } else {
+                    result.turtle = { status: '양호', text: `목 각도가 ${angle.toFixed(1)}도로 정상 범위입니다.` };
+                }
+            } else {
+                result.turtle = { status: '측정불가', text: '측면 사진에서 인물을 찾지 못했습니다.' };
             }
 
-            // 라운드숄더 (Front) - 거북목과 연관지어 추정
             if (front) {
-                const l = front[11]; const r = front[12];
-                const slope = Math.abs(l.y - r.y);
-                
-                if (slope > 0.04) {
-                    result.rounded = { status: '불균형', text: '양쪽 어깨 높이가 다릅니다.' };
-                } else if (result.turtle.status === '심각') {
-                    result.rounded = { status: '주의', text: '거북목으로 인한 라운드 숄더가 의심됩니다.' };
-                } else if (result.turtle.status === '주의') {
-                    result.rounded = { status: '관찰 필요', text: '어깨 말림이 시작될 수 있습니다.' };
+                const l = front[11];
+                const r = front[12];
+                const slopeAngle = calculateShoulderSlope(l, r);
+
+                if (slopeAngle > 3.0) {
+                    result.rounded = { status: '불균형', text: `양쪽 어깨 높이가 ${slopeAngle.toFixed(1)}도 가량 차이납니다.` };
+                } else if (slopeAngle > 1.5) {
+                    result.rounded = { status: '주의', text: `어깨 균형이 ${slopeAngle.toFixed(1)}도 정도 미세하게 틀어져 있습니다.` };
+                } else {
+                    result.rounded = { status: '양호', text: `어깨 수평 각도가 ${slopeAngle.toFixed(1)}도로 안정적입니다.` };
                 }
+            } else {
+                result.rounded = { status: '측정불가', text: '정면 사진에서 인물을 찾지 못했습니다.' };
             }
             
             return result;
         }
 
+        // [함수 추가] 운동 카드 생성 헬퍼 (상세 정보 포함)
+        function renderExerciseCard(name) {
+            const data = EXERCISE_DATA[name];
+            return `
+                <div onclick="openVideoModal('${name}')" class="bg-slate-50 p-4 rounded-xl border border-slate-100 cursor-pointer hover:bg-slate-100 transition-colors group">
+                    <div class="flex justify-between items-start mb-2">
+                        <strong class="text-slate-900 group-hover:text-teal-600 text-base flex items-center gap-1">
+                             ${name}
+                        </strong>
+                        <i class="ph ph-play-circle text-2xl text-slate-400 group-hover:text-teal-500"></i>
+                    </div>
+                    <p class="text-xs text-slate-600 mb-3 break-keep leading-relaxed">${data.desc}</p>
+                    <div class="flex flex-wrap gap-2 text-[11px] font-medium text-slate-500">
+                        <span class="bg-white px-2 py-1 rounded border border-slate-200 shadow-sm flex items-center gap-1 whitespace-nowrap"><i class="ph-bold ph-arrows-clockwise text-teal-500"></i> ${data.set}</span>
+                        <span class="bg-white px-2 py-1 rounded border border-slate-200 shadow-sm flex items-center gap-1 whitespace-nowrap"><i class="ph-bold ph-lightning text-yellow-500"></i> ${data.count}</span>
+                        <span class="bg-white px-2 py-1 rounded border border-slate-200 shadow-sm flex items-center gap-1 whitespace-nowrap"><i class="ph-bold ph-coffee text-orange-400"></i> ${data.rest}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 결과 표시 함수
         function displayResults(data) {
             const getColor = (s) => s === '양호' ? 'bg-green-500' : (s === '주의' ? 'bg-yellow-500' : 'bg-red-500');
             const getBadge = (s) => s === '양호' ? 'bg-green-100 text-green-700' : (s === '주의' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700');
 
-            // [FIXED] whitespace-nowrap과 shrink-0 클래스 추가
             resultCards.innerHTML = `
-                <!-- Rounded Shoulder -->
+                <!-- Rounded Shoulder Result -->
                 <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 overflow-hidden relative">
                     <div class="absolute top-0 left-0 w-2 h-full ${getColor(data.rounded.status)}"></div>
                     <div class="pl-4">
-                        <div class="flex justify-between items-start mb-4">
-                            <div><h3 class="text-lg font-bold text-slate-800">라운드 숄더</h3></div>
+                        <div class="flex justify-between items-center mb-4">
+                            <div><h3 class="text-lg font-bold text-slate-800">어깨 균형 (Front)</h3></div>
                             <span class="px-3 py-1 rounded-full text-sm font-bold whitespace-nowrap shrink-0 ${getBadge(data.rounded.status)}">${data.rounded.status}</span>
                         </div>
                         <p class="text-slate-700 mb-6 font-medium bg-slate-50 p-3 rounded-lg">${data.rounded.text}</p>
-                        ${data.rounded.status !== '양호' ? `
+                        ${data.rounded.status !== '양호' && data.rounded.status !== '측정불가' ? `
                         <div class="space-y-3">
-                            <h4 class="font-bold text-sm text-slate-900 flex items-center gap-2"><i class="ph ph-check-circle text-teal-600"></i> 헬스장 추천 솔루션</h4>
+                            <h4 class="font-bold text-sm text-slate-900 flex items-center gap-2"><i class="ph ph-youtube-logo text-red-600 text-lg"></i> 추천 운동 (클릭하여 재생)</h4>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div class="bg-slate-50 p-3 rounded-lg text-sm border border-slate-100"><strong class="block text-slate-800">페이스 풀</strong>케이블 당기기</div>
-                                <div class="bg-slate-50 p-3 rounded-lg text-sm border border-slate-100"><strong class="block text-slate-800">숄더 프레스</strong>어깨 근력 강화</div>
+                                ${renderExerciseCard("페이스 풀")}
+                                ${renderExerciseCard("숄더 프레스")}
                             </div>
                         </div>` : ''}
                     </div>
                 </div>
 
-                <!-- Turtle Neck -->
+                <!-- Turtle Neck Result -->
                 <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 overflow-hidden relative">
                     <div class="absolute top-0 left-0 w-2 h-full ${getColor(data.turtle.status)}"></div>
                     <div class="pl-4">
-                        <div class="flex justify-between items-start mb-4">
-                            <div><h3 class="text-lg font-bold text-slate-800">거북목</h3></div>
+                        <div class="flex justify-between items-center mb-4">
+                            <div><h3 class="text-lg font-bold text-slate-800">거북목 (Side)</h3></div>
                             <span class="px-3 py-1 rounded-full text-sm font-bold whitespace-nowrap shrink-0 ${getBadge(data.turtle.status)}">${data.turtle.status}</span>
                         </div>
                         <p class="text-slate-700 mb-6 font-medium bg-slate-50 p-3 rounded-lg">${data.turtle.text}</p>
-                        ${data.turtle.status !== '양호' ? `
+                        ${data.turtle.status !== '양호' && data.turtle.status !== '측정불가' ? `
                         <div class="space-y-3">
-                            <h4 class="font-bold text-sm text-slate-900 flex items-center gap-2"><i class="ph ph-check-circle text-teal-600"></i> 헬스장 추천 솔루션</h4>
+                            <h4 class="font-bold text-sm text-slate-900 flex items-center gap-2"><i class="ph ph-youtube-logo text-red-600 text-lg"></i> 추천 운동 (클릭하여 재생)</h4>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div class="bg-slate-50 p-3 rounded-lg text-sm border border-slate-100"><strong class="block text-slate-800">목 펴기 (Extension)</strong>경추 커브 회복</div>
-                                <div class="bg-slate-50 p-3 rounded-lg text-sm border border-slate-100"><strong class="block text-slate-800">업 라이트 로우</strong>승모근 강화</div>
+                                ${renderExerciseCard("목 펴기")}
+                                ${renderExerciseCard("업 라이트 로우")}
                             </div>
                         </div>` : ''}
                     </div>
@@ -528,33 +628,43 @@
             `;
         }
 
-        // 6. 다시 하기
-        resetAllBtn.addEventListener('click', () => {
-            location.reload(); // 가장 깔끔한 초기화
-        });
+        // 비디오 모달 관련 함수
+        function openVideoModal(exerciseName) {
+            const data = EXERCISE_DATA[exerciseName];
+            if (!data) return;
 
-        // 7. 이탈 감지 및 설문조사
-        function goToSurvey() {
-            window.location.href = SURVEY_URL;
+            let videoId = data.id;
+            // 만약 URL을 통째로 넣었을 경우 ID만 추출
+            if (videoId.includes('youtu.be/')) {
+                videoId = videoId.split('youtu.be/')[1].split('?')[0];
+            } else if (videoId.includes('v=')) {
+                videoId = videoId.split('v=')[1].split('&')[0];
+            }
+
+            videoTitle.textContent = exerciseName + " 가이드";
+            // mute=1, playsinline=1은 모바일 자동재생 정책을 위해 필수
+            videoFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1&rel=0`;
+            videoModal.classList.remove('hidden');
         }
 
-        function closeModal() {
-            exitModal.classList.add('hidden');
+        function closeVideoModal() {
+            videoModal.classList.add('hidden');
+            videoFrame.src = ""; // 영상 중지
         }
+
+        resetAllBtn.addEventListener('click', () => { location.reload(); });
+
+        function goToSurvey() { window.location.href = SURVEY_URL; }
+        function closeModal() { exitModal.classList.add('hidden'); }
 
         function initExitIntent() {
-            // (1) PC: 마우스 이탈
             document.addEventListener('mouseleave', (e) => {
-                if (e.clientY <= 0 && !hasShownExitModal) {
-                    showModal();
-                }
+                if (e.clientY <= 0 && !hasShownExitModal) { showModal(); }
             });
-
-            // (2) Mobile: 뒤로가기
             window.history.pushState({ page: 1 }, "", ""); 
             window.onpopstate = function(event) {
                 if (!hasShownExitModal) {
-                    window.history.pushState({ page: 1 }, "", ""); // 다시 state를 넣어 뒤로가기 막음
+                    window.history.pushState({ page: 1 }, "", "");
                     showModal();
                 }
             };
@@ -564,7 +674,6 @@
             hasShownExitModal = true;
             exitModal.classList.remove('hidden');
         }
-
     </script>
 </body>
 </html>
