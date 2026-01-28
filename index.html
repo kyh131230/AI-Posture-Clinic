@@ -61,6 +61,7 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 justify-items-center">
+                <!-- 정면 업로드 -->
                 <div class="flex flex-col gap-2 w-[200px]">
                     <div id="front-box" class="relative border-2 border-dashed border-slate-300 rounded-2xl p-6 w-[200px] h-[600px] flex flex-col items-center justify-center transition-all duration-300 overflow-hidden bg-white hover:border-teal-400">
                         <img id="front-preview" class="absolute inset-0 w-full h-full object-contain hidden z-10 bg-black" />
@@ -76,6 +77,7 @@
                         <button id="front-reset-btn" class="hidden absolute top-2 right-2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors z-20"><i class="ph ph-arrows-clockwise text-lg"></i></button>
                     </div>
                 </div>
+                <!-- 측면 업로드 -->
                 <div class="flex flex-col gap-2 w-[200px]">
                     <div id="side-box" class="relative border-2 border-dashed border-slate-300 rounded-2xl p-6 w-[200px] h-[600px] flex flex-col items-center justify-center transition-all duration-300 overflow-hidden bg-white hover:border-teal-400">
                         <img id="side-preview" class="absolute inset-0 w-full h-full object-contain hidden z-10 bg-black" />
@@ -101,7 +103,7 @@
         </div>
 
         <div id="result-view" class="space-y-6 hidden fade-in">
-            <!-- 캡처 영역 -->
+            <!-- 캡처 대상 영역 -->
             <div id="capture-target" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                 <div class="text-center space-y-2 mb-6">
                     <h2 class="text-2xl font-bold text-slate-900">분석 결과 리포트</h2>
@@ -125,31 +127,20 @@
 
     <footer class="mt-12 text-center text-slate-400 text-sm pb-8">&copy; 2026 남양주도시공사 전략기획부 AI Posture Clinic.</footer>
 
+    <!-- 설문조사 플로팅 버튼 -->
     <button onclick="goToSurvey()" class="fixed bottom-6 right-6 bg-slate-900 hover:bg-teal-600 text-white p-4 rounded-full shadow-2xl transition-all z-40 flex items-center gap-2 group hover:scale-105 active:scale-95"><i class="ph ph-clipboard-text text-xl"></i><span class="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 whitespace-nowrap text-sm font-bold">설문조사 참여</span></button>
 
-    <!-- 1. 이탈 감지 모달 (뒤로가기/마우스 이탈) -->
+    <!-- 1. 이탈 감지 모달 -->
     <div id="exit-modal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 hidden pop-in"><div class="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl relative"><button onclick="closeModal('exit-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="ph ph-x text-2xl"></i></button><div class="text-center"><div class="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ph ph-gift text-3xl text-teal-600"></i></div><h3 class="text-xl font-bold text-slate-900 mb-2">잠시만요! 👋</h3><p class="text-slate-500 mb-6 text-sm break-keep">분석 결과가 도움이 되셨나요?<br/>간단한 설문조사에 참여해주시면<br/>더 좋은 서비스를 만드는 데 큰 힘이 됩니다.</p><div class="flex flex-col gap-3"><button onclick="goToSurvey()" class="w-full bg-teal-600 text-white py-3 rounded-xl font-bold hover:bg-teal-700 transition-colors shadow-lg shadow-teal-200">네, 참여할게요!</button><button onclick="closeModal('exit-modal')" class="w-full text-slate-400 hover:text-slate-600 text-sm py-2">괜찮습니다, 다음에 할게요.</button></div></div></div></div>
 
-    <!-- 2. 의료 경고 모달 (분석 직후) -->
+    <!-- 2. 의료 경고 모달 -->
     <div id="medical-warning-modal" class="fixed inset-0 z-[60] modal-backdrop flex items-center justify-center p-4 hidden pop-in">
         <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl relative border-2 border-red-100">
             <div class="text-center">
-                <div class="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="ph ph-warning text-3xl text-red-500"></i>
-                </div>
+                <div class="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ph ph-warning text-3xl text-red-500"></i></div>
                 <h3 class="text-lg font-bold text-slate-900 mb-3">주의사항</h3>
-                <p class="text-slate-600 mb-6 text-sm leading-relaxed break-keep">
-                    본 솔루션은 <span class="text-highlight">의료 진단</span>이나 <span class="text-highlight">치료</span>를 위한 것이 아닌,<br/> <span class="text-highlight">참고용 서비스</span>입니다.<br><br>
-                    필요 시, <span class="text-highlight">의료 전문가</span>와 <span class="text-highlight">상담</span>하시길 바랍니다.
-                </p>
-                <div class="flex flex-col gap-3">
-                    <button onclick="confirmResultView()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-slate-800 transition-colors shadow-lg">
-                        알겠습니다
-                    </button>
-                    <button onclick="closeModal('medical-warning-modal')" class="w-full text-slate-400 hover:text-slate-600 text-sm py-2">
-                        아니요
-                    </button>
-                </div>
+                <p class="text-slate-600 mb-6 text-sm leading-relaxed break-keep">본 솔루션은 <span class="text-highlight">의료 진단</span>이나 <span class="text-highlight">치료</span>를 위한 것이 아닌, <span class="text-highlight">참고용 서비스</span>입니다.<br><br>필요 시, <span class="text-highlight">의료 전문가</span>와 <span class="text-highlight">상담</span>하시길 바랍니다.</p>
+                <div class="flex flex-col gap-3"><button onclick="confirmResultView()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-slate-800 transition-colors shadow-lg">알겠습니다</button><button onclick="closeModal('medical-warning-modal')" class="w-full text-slate-400 hover:text-slate-600 text-sm py-2">아니요</button></div>
             </div>
         </div>
     </div>
@@ -160,12 +151,12 @@
     <script>
         const SURVEY_URL = "https://naver.me/FTMiqIuh"; 
         
-        // [업데이트] 운동 기본 정보 (세트/회수는 동적으로 변경됨)
+        // 운동 기본 정보
         const EXERCISE_BASE = {
-            "페이스 풀": { id: "90V84gRS2_Y", desc: "케이블을 눈높이로 당겨 등 상부를 수축합니다." },
-            "숄더 프레스": { id: "qEwKCR5JCog", desc: "팔꿈치를 직각이 되도록 내렸다가 머리 위로 밉니다." },
-            "목 펴기": { id: "wQylqaCl8Zo", desc: "가슴을 펴고 턱을 당긴 채, 머리를 뒤로 젖혀 유지합니다." },
-            "업 라이트 로우": { id: "amcu-8CUSQw", desc: "바를 몸에 스치듯 턱 밑까지 당겨 올립니다." }
+            "페이스 풀": { id: "NT53uDVkhD4", desc: "케이블을 눈높이로 당겨 등 상부를 수축합니다." },
+            "숄더 프레스": { id: "Sj2VG2MNdK0", desc: "팔꿈치를 직각이 되도록 내렸다가 머리 위로 밉니다." },
+            "목 펴기": { id: "CI469Kof1Lc", desc: "가슴을 펴고 턱을 당긴 채, 머리를 뒤로 젖혀 유지합니다." },
+            "업 라이트 로우": { id: "7WandORK8ro", desc: "바를 몸에 스치듯 턱 밑까지 당겨 올립니다." }
         };
 
         let poseNet = null;
@@ -189,7 +180,7 @@
         const resetAllBtn = document.getElementById('reset-all-btn');
         const saveBtn = document.getElementById('save-btn');
         const exitModal = document.getElementById('exit-modal');
-        const medicalModal = document.getElementById('medical-warning-modal'); // 의료 경고 모달
+        const medicalModal = document.getElementById('medical-warning-modal');
         const videoModal = document.getElementById('video-modal');
         const videoFrame = document.getElementById('video-frame');
         const videoTitle = document.getElementById('video-title');
@@ -264,7 +255,6 @@
             }
         }
 
-        // [중요] 분석 버튼 클릭 시 -> 바로 결과로 가지 않고 경고 팝업 호출
         analyzeBtn.addEventListener('click', async () => {
             if (!frontImgData || !sideImgData || !poseNet) return;
             analyzeBtn.disabled = true;
@@ -277,10 +267,8 @@
                 const diagnosis = calculateDiagnosis(frontRes, sideRes);
                 displayResults(diagnosis);
                 
-                // [수정됨] 바로 전환하지 않고 경고 모달 표시
-                // UI 로딩 상태 복구 후 모달 띄움
                 updateAnalyzeButton();
-                medicalModal.classList.remove('hidden');
+                medicalModal.classList.remove('hidden'); // 경고창 띄우기
 
             } catch (error) {
                 console.error(error);
@@ -289,20 +277,20 @@
             }
         });
 
-        // [추가] "알겠습니다" 클릭 시 결과 화면으로 전환
         function confirmResultView() {
-            medicalModal.classList.add('hidden'); // 경고창 닫기
-            uploadView.classList.add('hidden'); // 업로드창 숨기기
-            resultView.classList.remove('hidden'); // 결과창 보이기
+            medicalModal.classList.add('hidden'); 
+            uploadView.classList.add('hidden'); 
+            resultView.classList.remove('hidden'); 
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // 캡처 및 저장 기능
+        // 이미지 저장 (캡처)
         saveBtn.addEventListener('click', () => {
             const captureTarget = document.getElementById('capture-target');
             const originalText = saveBtn.innerHTML;
             saveBtn.innerHTML = '<div class="spinner w-5 h-5 border-2 border-white"></div> 저장 중...';
             saveBtn.disabled = true;
+
             html2canvas(captureTarget, { scale: 2, useCORS: true, backgroundColor: "#ffffff" }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = 'AI_체형분석_결과.png';
@@ -381,20 +369,14 @@
             ctx.restore();
         }
 
-        // [진단 기준] 거북목 40/50, 라운드숄더 3.0/1.5
         function calculateDiagnosis(front, side) {
-            let result = {
-                rounded: { status: '양호', text: '정면 어깨 균형이 안정적입니다.' },
-                turtle: { status: '양호', text: '측면 목 정렬이 바릅니다.' }
-            };
-
+            let result = { rounded: { status: '양호', text: '정면 어깨 균형이 안정적입니다.' }, turtle: { status: '양호', text: '측면 목 정렬이 바릅니다.' } };
             if (side) {
                 const shoulder = side[11]; const ear = side[7];
                 const angle = calculateAngle(ear, shoulder);
                 if (angle > 50) result.turtle = { status: '심각', text: `목이 수직 기준 ${angle.toFixed(1)}도 앞으로 굽어있습니다.` };
                 else if (angle > 40) result.turtle = { status: '주의', text: `목이 수직 기준 ${angle.toFixed(1)}도 기울어져 있습니다.` };
             } else { result.turtle = { status: '측정불가', text: '측면 사진에서 인물을 찾지 못했습니다.' }; }
-
             if (front) {
                 const l = front[11]; const r = front[12];
                 const slopeAngle = calculateShoulderSlope(l, r);
@@ -404,37 +386,23 @@
             return result;
         }
 
-        // [동적 운동 처방 로직]
         function getRoutineByStatus(status) {
-            if (status === '심각' || status === '불균형') {
-                return { set: "4세트", count: "12회", rest: "90초" }; // 강도 높음/교정 집중
-            } else if (status === '주의') {
-                return { set: "3세트", count: "15회", rest: "60초" }; // 표준 교정
-            } else {
-                return { set: "2세트", count: "15회", rest: "30초" }; // 유지 관리
-            }
+            if (status === '심각' || status === '불균형') return { set: "4세트", count: "12회", rest: "90초" };
+            else if (status === '주의') return { set: "3세트", count: "15회", rest: "60초" };
+            else return { set: "2세트", count: "15회", rest: "30초" };
         }
 
         function renderExerciseCard(name, status) {
             const data = EXERCISE_BASE[name];
             const routine = getRoutineByStatus(status);
-            
-            return `
-                <div onclick="openVideoModal('${name}')" class="bg-slate-50 p-4 rounded-xl border border-slate-100 cursor-pointer hover:bg-slate-100 transition-colors group">
-                    <div class="flex justify-between items-center mb-2">
-                        <strong class="text-slate-900 group-hover:text-teal-600 text-base flex items-center gap-1">
-                             ${name}
-                        </strong>
-                        <i class="ph ph-play-circle text-2xl text-slate-400 group-hover:text-teal-500"></i>
-                    </div>
+            return `<div onclick="openVideoModal('${name}')" class="bg-slate-50 p-4 rounded-xl border border-slate-100 cursor-pointer hover:bg-slate-100 transition-colors group">
+                    <div class="flex justify-between items-center mb-2"><strong class="text-slate-900 group-hover:text-teal-600 text-base flex items-center gap-1">${name}</strong><i class="ph ph-play-circle text-2xl text-slate-400 group-hover:text-teal-500"></i></div>
                     <p class="text-xs text-slate-600 mb-3 break-keep leading-relaxed">${data.desc}</p>
                     <div class="flex flex-wrap gap-2 text-[11px] font-medium text-slate-500">
                         <span class="bg-white px-2 py-1 rounded border border-slate-200 shadow-sm flex items-center gap-1 whitespace-nowrap"><i class="ph-bold ph-arrows-clockwise text-teal-500"></i> ${routine.set}</span>
                         <span class="bg-white px-2 py-1 rounded border border-slate-200 shadow-sm flex items-center gap-1 whitespace-nowrap"><i class="ph-bold ph-lightning text-yellow-500"></i> ${routine.count}</span>
                         <span class="bg-white px-2 py-1 rounded border border-slate-200 shadow-sm flex items-center gap-1 whitespace-nowrap"><i class="ph-bold ph-coffee text-orange-400"></i> ${routine.rest}</span>
-                    </div>
-                </div>
-            `;
+                    </div></div>`;
         }
 
         function displayResults(data) {
@@ -466,7 +434,6 @@
         }
 
         function closeVideoModal() { videoModal.classList.add('hidden'); videoFrame.src = ""; }
-        // 모달 닫기 공통 함수 (ID 기반)
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
         
         resetAllBtn.addEventListener('click', () => { location.reload(); });
