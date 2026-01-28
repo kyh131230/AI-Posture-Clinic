@@ -29,17 +29,18 @@
         @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         
         .modal-backdrop { background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); z-index: 100; }
-        
         .spinner { border: 4px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top: 4px solid #0d9488; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
         .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; background: #000; border-radius: 0.75rem; }
         .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         .cursor-pointer { cursor: pointer; }
+        
+        /* 강조 텍스트 스타일 */
+        .text-highlight { color: #dc2626; font-weight: 700; }
     </style>
 </head>
 <body>
-
     <header class="bg-white shadow-sm sticky top-0 z-10">
         <div class="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
             <div class="flex items-center space-x-2">
@@ -60,12 +61,11 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 justify-items-center">
-                <!-- 정면 업로드 -->
                 <div class="flex flex-col gap-2 w-[200px]">
                     <div id="front-box" class="relative border-2 border-dashed border-slate-300 rounded-2xl p-6 w-[200px] h-[600px] flex flex-col items-center justify-center transition-all duration-300 overflow-hidden bg-white hover:border-teal-400">
                         <img id="front-preview" class="absolute inset-0 w-full h-full object-contain hidden z-10 bg-black" />
                         <div id="front-placeholder" class="flex flex-col items-center w-full h-full relative z-0">
-                            <img src="front.png" class="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none" onerror="this.style.display='none'">
+                            <img src="front.jpg" class="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none" onerror="this.style.display='none'">
                             <div class="z-10 flex flex-col items-center justify-center h-full gap-4 w-full">
                                 <div class="text-center bg-white/80 p-3 rounded-xl backdrop-blur-sm shadow-sm w-full"><span class="font-bold text-slate-700 block">정면 사진</span><span class="text-xs text-slate-500">어깨 라인이 보이게<br/>차렷 자세</span></div>
                                 <div class="flex flex-col gap-2 w-full px-4">
@@ -76,12 +76,11 @@
                         <button id="front-reset-btn" class="hidden absolute top-2 right-2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors z-20"><i class="ph ph-arrows-clockwise text-lg"></i></button>
                     </div>
                 </div>
-                <!-- 측면 업로드 -->
                 <div class="flex flex-col gap-2 w-[200px]">
                     <div id="side-box" class="relative border-2 border-dashed border-slate-300 rounded-2xl p-6 w-[200px] h-[600px] flex flex-col items-center justify-center transition-all duration-300 overflow-hidden bg-white hover:border-teal-400">
                         <img id="side-preview" class="absolute inset-0 w-full h-full object-contain hidden z-10 bg-black" />
                         <div id="side-placeholder" class="flex flex-col items-center w-full h-full relative z-0">
-                            <img src="side.png" class="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none" onerror="this.style.display='none'">
+                            <img src="side.jpg" class="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none" onerror="this.style.display='none'">
                             <div class="z-10 flex flex-col items-center justify-center h-full gap-4 w-full">
                                 <div class="text-center bg-white/80 p-3 rounded-xl backdrop-blur-sm shadow-sm w-full"><span class="font-bold text-slate-700 block">측면 사진</span><span class="text-xs text-slate-500">귀와 어깨가<br/>잘 보이도록 촬영</span></div>
                                 <div class="flex flex-col gap-2 w-full px-4">
@@ -93,7 +92,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="flex justify-center pt-2">
                 <button id="analyze-btn" class="w-full md:w-auto px-10 py-4 rounded-xl font-bold text-lg shadow-xl shadow-teal-100 transition-all transform active:scale-95 bg-slate-200 text-slate-400 cursor-not-allowed" disabled>AI 엔진 로딩 중...</button>
             </div>
@@ -123,26 +121,51 @@
                 <button id="reset-all-btn" class="w-full bg-slate-800 text-white py-4 rounded-xl font-bold hover:bg-slate-900 transition-colors shadow-lg flex items-center justify-center gap-2"><i class="ph ph-arrows-clockwise text-xl"></i> 다른 사진으로 다시 분석하기</button>
             </div>
         </div>
-
     </main>
 
     <footer class="mt-12 text-center text-slate-400 text-sm pb-8">&copy; 2026 남양주도시공사 전략기획부 AI Posture Clinic.</footer>
 
     <button onclick="goToSurvey()" class="fixed bottom-6 right-6 bg-slate-900 hover:bg-teal-600 text-white p-4 rounded-full shadow-2xl transition-all z-40 flex items-center gap-2 group hover:scale-105 active:scale-95"><i class="ph ph-clipboard-text text-xl"></i><span class="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 whitespace-nowrap text-sm font-bold">설문조사 참여</span></button>
 
-    <div id="exit-modal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 hidden pop-in"><div class="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl relative"><button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="ph ph-x text-2xl"></i></button><div class="text-center"><div class="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ph ph-gift text-3xl text-teal-600"></i></div><h3 class="text-xl font-bold text-slate-900 mb-2">잠시만요! 👋</h3><p class="text-slate-500 mb-6 text-sm break-keep">분석 결과가 도움이 되셨나요?<br/>간단한 설문조사에 참여해주시면<br/>더 좋은 서비스를 만드는 데 큰 힘이 됩니다.</p><div class="flex flex-col gap-3"><button onclick="goToSurvey()" class="w-full bg-teal-600 text-white py-3 rounded-xl font-bold hover:bg-teal-700 transition-colors shadow-lg shadow-teal-200">네, 참여할게요!</button><button onclick="closeModal()" class="w-full text-slate-400 hover:text-slate-600 text-sm py-2">괜찮습니다, 다음에 할게요.</button></div></div></div></div>
+    <!-- 1. 이탈 감지 모달 (뒤로가기/마우스 이탈) -->
+    <div id="exit-modal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 hidden pop-in"><div class="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl relative"><button onclick="closeModal('exit-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="ph ph-x text-2xl"></i></button><div class="text-center"><div class="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ph ph-gift text-3xl text-teal-600"></i></div><h3 class="text-xl font-bold text-slate-900 mb-2">잠시만요! 👋</h3><p class="text-slate-500 mb-6 text-sm break-keep">분석 결과가 도움이 되셨나요?<br/>간단한 설문조사에 참여해주시면<br/>더 좋은 서비스를 만드는 데 큰 힘이 됩니다.</p><div class="flex flex-col gap-3"><button onclick="goToSurvey()" class="w-full bg-teal-600 text-white py-3 rounded-xl font-bold hover:bg-teal-700 transition-colors shadow-lg shadow-teal-200">네, 참여할게요!</button><button onclick="closeModal('exit-modal')" class="w-full text-slate-400 hover:text-slate-600 text-sm py-2">괜찮습니다, 다음에 할게요.</button></div></div></div></div>
 
-    <div id="video-modal" class="fixed inset-0 z-[60] modal-backdrop flex items-center justify-center p-4 hidden"><div class="bg-black w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl relative animate-pop"><div class="p-4 flex justify-between items-center text-white bg-gray-900"><h3 id="video-title" class="font-bold text-lg">운동 가이드</h3><button onclick="closeVideoModal()" class="text-gray-300 hover:text-white"><i class="ph ph-x text-2xl"></i></button></div><div class="video-container"><iframe id="video-frame" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><div class="p-3 bg-gray-900 text-center border-t border-gray-800"><a id="video-link" href="#" target="_blank" class="inline-flex items-center gap-2 text-sm text-teal-400 hover:text-teal-300 transition-colors"><i class="ph ph-arrow-square-out"></i> 영상이 재생되지 않나요? YouTube에서 직접 보기</a></div></div></div>
+    <!-- 2. 의료 경고 모달 (분석 직후) -->
+    <div id="medical-warning-modal" class="fixed inset-0 z-[60] modal-backdrop flex items-center justify-center p-4 hidden pop-in">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl relative border-2 border-red-100">
+            <div class="text-center">
+                <div class="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="ph ph-warning text-3xl text-red-500"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 mb-3">주의사항</h3>
+                <p class="text-slate-600 mb-6 text-sm leading-relaxed break-keep">
+                    본 솔루션은 <span class="text-highlight">의료 진단</span>이나 <span class="text-highlight">치료</span>를 위한 것이 아닌,<br/> <span class="text-highlight">참고용 서비스</span>입니다.<br><br>
+                    필요 시, <span class="text-highlight">의료 전문가</span>와 <span class="text-highlight">상담</span>하시길 바랍니다.
+                </p>
+                <div class="flex flex-col gap-3">
+                    <button onclick="confirmResultView()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-slate-800 transition-colors shadow-lg">
+                        알겠습니다
+                    </button>
+                    <button onclick="closeModal('medical-warning-modal')" class="w-full text-slate-400 hover:text-slate-600 text-sm py-2">
+                        아니요
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. 비디오 모달 -->
+    <div id="video-modal" class="fixed inset-0 z-[70] modal-backdrop flex items-center justify-center p-4 hidden"><div class="bg-black w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl relative animate-pop"><div class="p-4 flex justify-between items-center text-white bg-gray-900"><h3 id="video-title" class="font-bold text-lg">운동 가이드</h3><button onclick="closeVideoModal()" class="text-gray-300 hover:text-white"><i class="ph ph-x text-2xl"></i></button></div><div class="video-container"><iframe id="video-frame" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><div class="p-3 bg-gray-900 text-center border-t border-gray-800"><a id="video-link" href="#" target="_blank" class="inline-flex items-center gap-2 text-sm text-teal-400 hover:text-teal-300 transition-colors"><i class="ph ph-arrow-square-out"></i> 영상이 재생되지 않나요? YouTube에서 직접 보기</a></div></div></div>
 
     <script>
         const SURVEY_URL = "https://naver.me/FTMiqIuh"; 
         
         // [업데이트] 운동 기본 정보 (세트/회수는 동적으로 변경됨)
         const EXERCISE_BASE = {
-            "페이스 풀": { id: "NT53uDVkhD4", desc: "케이블을 눈높이로 당겨 등 상부를 수축합니다." },
-            "숄더 프레스": { id: "Sj2VG2MNdK0", desc: "팔꿈치를 직각이 되도록 내렸다가 머리 위로 밉니다." },
-            "목 펴기": { id: "CI469Kof1Lc", desc: "가슴을 펴고 턱을 당긴 채, 머리를 뒤로 젖혀 유지합니다." },
-            "업 라이트 로우": { id: "7WandORK8ro", desc: "바를 몸에 스치듯 턱 밑까지 당겨 올립니다." }
+            "페이스 풀": { id: "90V84gRS2_Y", desc: "케이블을 눈높이로 당겨 등 상부를 수축합니다." },
+            "숄더 프레스": { id: "qEwKCR5JCog", desc: "팔꿈치를 직각이 되도록 내렸다가 머리 위로 밉니다." },
+            "목 펴기": { id: "wQylqaCl8Zo", desc: "가슴을 펴고 턱을 당긴 채, 머리를 뒤로 젖혀 유지합니다." },
+            "업 라이트 로우": { id: "amcu-8CUSQw", desc: "바를 몸에 스치듯 턱 밑까지 당겨 올립니다." }
         };
 
         let poseNet = null;
@@ -166,6 +189,7 @@
         const resetAllBtn = document.getElementById('reset-all-btn');
         const saveBtn = document.getElementById('save-btn');
         const exitModal = document.getElementById('exit-modal');
+        const medicalModal = document.getElementById('medical-warning-modal'); // 의료 경고 모달
         const videoModal = document.getElementById('video-modal');
         const videoFrame = document.getElementById('video-frame');
         const videoTitle = document.getElementById('video-title');
@@ -240,10 +264,11 @@
             }
         }
 
+        // [중요] 분석 버튼 클릭 시 -> 바로 결과로 가지 않고 경고 팝업 호출
         analyzeBtn.addEventListener('click', async () => {
             if (!frontImgData || !sideImgData || !poseNet) return;
             analyzeBtn.disabled = true;
-            analyzeBtn.innerHTML = '<div class="flex items-center justify-center space-x-2"><div class="spinner border-2 w-5 h-5"></div><span>정밀 분석 중...</span></div>';
+            analyzeBtn.innerHTML = '<div class="spinner"></div><span>정밀 분석 중...</span>';
             try {
                 const frontCanvas = document.getElementById('front-canvas');
                 const frontRes = await processImage(frontImgData, frontCanvas, 'front');
@@ -251,16 +276,26 @@
                 const sideRes = await processImage(sideImgData, sideCanvas, 'side');
                 const diagnosis = calculateDiagnosis(frontRes, sideRes);
                 displayResults(diagnosis);
-                uploadView.classList.add('hidden');
-                resultView.classList.remove('hidden');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                // [수정됨] 바로 전환하지 않고 경고 모달 표시
+                // UI 로딩 상태 복구 후 모달 띄움
+                updateAnalyzeButton();
+                medicalModal.classList.remove('hidden');
+
             } catch (error) {
                 console.error(error);
                 alert("분석 중 오류가 발생했습니다. 사진을 확인해주세요.");
-            } finally {
                 updateAnalyzeButton();
             }
         });
+
+        // [추가] "알겠습니다" 클릭 시 결과 화면으로 전환
+        function confirmResultView() {
+            medicalModal.classList.add('hidden'); // 경고창 닫기
+            uploadView.classList.add('hidden'); // 업로드창 숨기기
+            resultView.classList.remove('hidden'); // 결과창 보이기
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
         // 캡처 및 저장 기능
         saveBtn.addEventListener('click', () => {
@@ -349,8 +384,8 @@
         // [진단 기준] 거북목 40/50, 라운드숄더 3.0/1.5
         function calculateDiagnosis(front, side) {
             let result = {
-                rounded: { status: '양호', text: '정면 어깨 균형이 안정적입니다.<br/>아래 추천하는 유지 운동을 실시하세요.' },
-                turtle: { status: '양호', text: '측면 목 정렬이 바릅니다.<br/>아래 추천하는 유지 운동을 실시하세요.' }
+                rounded: { status: '양호', text: '정면 어깨 균형이 안정적입니다.' },
+                turtle: { status: '양호', text: '측면 목 정렬이 바릅니다.' }
             };
 
             if (side) {
@@ -405,48 +440,17 @@
         function displayResults(data) {
             const getColor = (s) => s === '양호' ? 'bg-green-500' : (s === '주의' ? 'bg-yellow-500' : 'bg-red-500');
             const getBadge = (s) => s === '양호' ? 'bg-green-100 text-green-700' : (s === '주의' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700');
-
             resultCards.innerHTML = `
-                <!-- Rounded Shoulder Result -->
                 <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 overflow-hidden relative">
                     <div class="absolute top-0 left-0 w-2 h-full ${getColor(data.rounded.status)}"></div>
-                    <div class="pl-4">
-                        <div class="flex justify-between items-center mb-4">
-                            <div><h3 class="text-lg font-bold text-slate-800">어깨 균형 (Front)</h3></div>
-                            <span class="px-3 py-1 rounded-full text-sm font-bold whitespace-nowrap shrink-0 ${getBadge(data.rounded.status)}">${data.rounded.status}</span>
-                        </div>
-                        <p class="text-slate-700 mb-6 font-medium bg-slate-50 p-3 rounded-lg">${data.rounded.text}</p>
-                        ${data.rounded.status !== '측정불가' ? `
-                        <div class="space-y-3">
-                            <h4 class="font-bold text-sm text-slate-900 flex items-center gap-2"><i class="ph ph-youtube-logo text-red-600 text-lg"></i> 맞춤 운동 (클릭하여 재생)</h4>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                ${renderExerciseCard("페이스 풀", data.rounded.status)}
-                                ${renderExerciseCard("숄더 프레스", data.rounded.status)}
-                            </div>
-                        </div>` : ''}
-                    </div>
+                    <div class="pl-4"><div class="flex justify-between items-center mb-4"><div><h3 class="text-lg font-bold text-slate-800">어깨 균형 (Front)</h3></div><span class="px-3 py-1 rounded-full text-sm font-bold whitespace-nowrap shrink-0 ${getBadge(data.rounded.status)}">${data.rounded.status}</span></div><p class="text-slate-700 mb-6 font-medium bg-slate-50 p-3 rounded-lg">${data.rounded.text}</p>
+                    ${data.rounded.status !== '측정불가' ? `<div class="space-y-3"><h4 class="font-bold text-sm text-slate-900 flex items-center gap-2"><i class="ph ph-youtube-logo text-red-600 text-lg"></i> 맞춤 운동 (클릭하여 재생)</h4><div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${renderExerciseCard("페이스 풀", data.rounded.status)}${renderExerciseCard("숄더 프레스", data.rounded.status)}</div></div>` : ''}</div>
                 </div>
-
-                <!-- Turtle Neck Result -->
                 <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 overflow-hidden relative">
                     <div class="absolute top-0 left-0 w-2 h-full ${getColor(data.turtle.status)}"></div>
-                    <div class="pl-4">
-                        <div class="flex justify-between items-center mb-4">
-                            <div><h3 class="text-lg font-bold text-slate-800">거북목 (Side)</h3></div>
-                            <span class="px-3 py-1 rounded-full text-sm font-bold whitespace-nowrap shrink-0 ${getBadge(data.turtle.status)}">${data.turtle.status}</span>
-                        </div>
-                        <p class="text-slate-700 mb-6 font-medium bg-slate-50 p-3 rounded-lg">${data.turtle.text}</p>
-                        ${data.turtle.status !== '측정불가' ? `
-                        <div class="space-y-3">
-                            <h4 class="font-bold text-sm text-slate-900 flex items-center gap-2"><i class="ph ph-youtube-logo text-red-600 text-lg"></i> 맞춤 운동 (클릭하여 재생)</h4>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                ${renderExerciseCard("목 펴기", data.turtle.status)}
-                                ${renderExerciseCard("업 라이트 로우", data.turtle.status)}
-                            </div>
-                        </div>` : ''}
-                    </div>
-                </div>
-            `;
+                    <div class="pl-4"><div class="flex justify-between items-center mb-4"><div><h3 class="text-lg font-bold text-slate-800">거북목 (Side)</h3></div><span class="px-3 py-1 rounded-full text-sm font-bold whitespace-nowrap shrink-0 ${getBadge(data.turtle.status)}">${data.turtle.status}</span></div><p class="text-slate-700 mb-6 font-medium bg-slate-50 p-3 rounded-lg">${data.turtle.text}</p>
+                    ${data.turtle.status !== '측정불가' ? `<div class="space-y-3"><h4 class="font-bold text-sm text-slate-900 flex items-center gap-2"><i class="ph ph-youtube-logo text-red-600 text-lg"></i> 맞춤 운동 (클릭하여 재생)</h4><div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${renderExerciseCard("목 펴기", data.turtle.status)}${renderExerciseCard("업 라이트 로우", data.turtle.status)}</div></div>` : ''}</div>
+                </div>`;
         }
 
         function openVideoModal(exerciseName) {
@@ -462,9 +466,12 @@
         }
 
         function closeVideoModal() { videoModal.classList.add('hidden'); videoFrame.src = ""; }
+        // 모달 닫기 공통 함수 (ID 기반)
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        
         resetAllBtn.addEventListener('click', () => { location.reload(); });
         function goToSurvey() { window.location.href = SURVEY_URL; }
-        function closeModal() { exitModal.classList.add('hidden'); }
+        
         function initExitIntent() {
             document.addEventListener('mouseleave', (e) => { if (e.clientY <= 0 && !hasShownExitModal) { showModal(); } });
             window.history.pushState({ page: 1 }, "", ""); 
