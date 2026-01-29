@@ -47,7 +47,7 @@
                 <div class="bg-teal-600 p-2 rounded-lg text-white"><i class="ph ph-camera text-xl"></i></div>
                 <h1 class="text-xl font-bold tracking-tight text-slate-900">AI Posture Clinic</h1>
             </div>
-            <span class="text-xs font-bold bg-teal-50 text-teal-700 px-3 py-1 rounded-full border border-teal-100">Ver 1.2</span>
+            <span class="text-xs font-bold bg-teal-50 text-teal-700 px-3 py-1 rounded-full border border-teal-100">Ver 1.3</span>
         </div>
     </header>
 
@@ -130,8 +130,10 @@
 
     <footer class="mt-12 text-center text-slate-400 text-sm pb-8">&copy; 2026 남양주도시공사 전략기획부 AI Posture Clinic.</footer>
 
-    <!-- 설문조사 플로팅 버튼 -->
-    <button onclick="goToSurvey()" class="fixed bottom-6 right-6 bg-slate-900 hover:bg-teal-600 text-white p-4 rounded-full shadow-2xl transition-all z-40 flex items-center gap-2 group hover:scale-105 active:scale-95"><i class="ph ph-clipboard-text text-xl"></i><span class="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 whitespace-nowrap text-sm font-bold">설문조사 참여</span></button>
+    <!-- 설문조사 플로팅 버튼 (수정됨: 텍스트 및 색상 변경) -->
+    <button onclick="goToSurvey()" class="fixed bottom-6 right-6 bg-orange-500 hover:bg-orange-600 text-white px-6 py-4 rounded-full shadow-2xl transition-all z-40 flex items-center justify-center group hover:scale-105 active:scale-95 font-bold text-lg animate-bounce">
+        설문조사
+    </button>
 
     <!-- 1. 이탈 감지 모달 -->
     <div id="exit-modal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 hidden pop-in"><div class="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl relative"><button onclick="closeModal('exit-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="ph ph-x text-2xl"></i></button><div class="text-center"><div class="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ph ph-gift text-3xl text-teal-600"></i></div><h3 class="text-xl font-bold text-slate-900 mb-2">잠시만요! 👋</h3><p class="text-slate-500 mb-6 text-sm break-keep">분석 결과가 도움이 되셨나요?<br/>간단한 설문조사에 참여해주시면<br/>더 좋은 서비스를 만드는 데 큰 힘이 됩니다.</p><div class="flex flex-col gap-3"><button onclick="goToSurvey()" class="w-full bg-teal-600 text-white py-3 rounded-xl font-bold hover:bg-teal-700 transition-colors shadow-lg shadow-teal-200">네, 참여할게요!</button><button onclick="closeModal('exit-modal')" class="w-full text-slate-400 hover:text-slate-600 text-sm py-2">괜찮습니다, 다음에 할게요.</button></div></div></div></div>
@@ -197,9 +199,33 @@
                 isSdkLoaded = true;
                 updateAnalyzeButton();
                 initExitIntent();
+                
+                // 페이지 로드 시 초기 상태 저장
+                history.replaceState({ page: 'home' }, '', '');
             } catch (error) {
                 console.error("MediaPipe Load Error:", error);
                 analyzeBtn.textContent = "AI 엔진 로드 실패";
+            }
+        };
+        
+        // --- [기능 추가] 뒤로가기 제어 로직 (팝업, 비디오) ---
+        window.onpopstate = function(event) {
+            // 1. 비디오 모달이 열려있는 경우 -> 비디오만 닫음
+            if (!videoModal.classList.contains('hidden')) {
+                videoModal.classList.add('hidden');
+                videoFrame.src = "";
+                return; // 여기서 종료 (페이지 뒤로가기 방지 효과)
+            }
+
+            // 2. 결과 화면에서 뒤로가기를 누른 경우 -> 설문조사 이탈 모달 표시
+            if (!resultView.classList.contains('hidden')) {
+                // 이미 설문 모달이 떠있지 않다면
+                if (exitModal.classList.contains('hidden')) {
+                    showModal();
+                    // 뒤로가기로 페이지를 이탈하는 것을 막기 위해 다시 상태 푸시
+                    history.pushState({ page: 'result' }, '', '');
+                }
+                return;
             }
         };
 
@@ -285,6 +311,9 @@
             uploadView.classList.add('hidden'); 
             resultView.classList.remove('hidden'); 
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // --- [기능 추가] 결과 화면 진입 시 히스토리 상태 추가 (뒤로가기 캡처용)
+            history.pushState({ page: 'result' }, '', '');
         }
 
         // 이미지 저장 (캡처)
@@ -319,10 +348,8 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0);
 
-                    // --- [기능 추가] 고해상도 대응 스케일 계산 ---
                     // 이미지 긴 쪽 기준으로 스케일링 (기본 1000px 기준)
                     const scaleFactor = Math.max(img.width, img.height) / 1000;
-                    // 최소 1배율은 유지
                     const finalScale = Math.max(1, scaleFactor);
 
                     const onResults = (res) => {
@@ -355,16 +382,14 @@
             return Math.atan2(dy, dx) * (180 / Math.PI);
         }
 
-        // --- [기능 수정] 스케일 인자 추가 및 적용 ---
         function drawDiagnosticLines(ctx, landmarks, type, scale) {
             ctx.save();
             
-            // 해상도에 따른 동적 크기 조절
             const lineWidth = 8 * scale;
             const fontSize = 20 * scale;
             const circleRadius = 10 * scale;
             const dashSize = 5 * scale;
-            const offset = 60 * scale; // 측면 귀-어깨 수직선 길이 오프셋
+            const offset = 60 * scale; 
             const textOffset = 20 * scale;
 
             ctx.lineWidth = lineWidth;
@@ -460,18 +485,35 @@
             videoFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1&rel=0`;
             document.getElementById('video-link').href = `https://www.youtube.com/watch?v=${videoId}`;
             videoModal.classList.remove('hidden');
+            
+            // --- [기능 추가] 비디오 모달 열 때 상태 추가
+            history.pushState({ modal: 'video' }, '', '');
         }
 
-        function closeVideoModal() { videoModal.classList.add('hidden'); videoFrame.src = ""; }
+        // --- [기능 수정] 비디오 모달 닫기 로직 (X버튼 클릭 시 뒤로가기 실행)
+        function closeVideoModal() {
+            // 히스토리 상태가 비디오라면 뒤로가기를 실행하여 popstate 이벤트 트리거
+            if (history.state && history.state.modal === 'video') {
+                history.back(); 
+            } else {
+                // 비정상적인 경우 강제 닫기
+                videoModal.classList.add('hidden');
+                videoFrame.src = "";
+            }
+        }
+        
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
         
         resetAllBtn.addEventListener('click', () => { location.reload(); });
         function goToSurvey() { window.location.href = SURVEY_URL; }
         
         function initExitIntent() {
-            document.addEventListener('mouseleave', (e) => { if (e.clientY <= 0 && !hasShownExitModal) { showModal(); } });
-            window.history.pushState({ page: 1 }, "", ""); 
-            window.onpopstate = function(event) { if (!hasShownExitModal) { window.history.pushState({ page: 1 }, "", ""); showModal(); } };
+            // 데스크탑용 마우스 이탈 감지 유지
+            document.addEventListener('mouseleave', (e) => { 
+                if (e.clientY <= 0 && !hasShownExitModal && !resultView.classList.contains('hidden')) { 
+                    showModal(); 
+                } 
+            });
         }
         function showModal() { hasShownExitModal = true; exitModal.classList.remove('hidden'); }
     </script>
