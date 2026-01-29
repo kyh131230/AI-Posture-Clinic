@@ -47,7 +47,7 @@
                 <div class="bg-teal-600 p-2 rounded-lg text-white"><i class="ph ph-camera text-xl"></i></div>
                 <h1 class="text-xl font-bold tracking-tight text-slate-900">AI Posture Clinic</h1>
             </div>
-            <span class="text-xs font-bold bg-teal-50 text-teal-700 px-3 py-1 rounded-full border border-teal-100">Ver 1.0</span>
+            <span class="text-xs font-bold bg-teal-50 text-teal-700 px-3 py-1 rounded-full border border-teal-100">Ver 1.2</span>
         </div>
     </header>
 
@@ -66,6 +66,7 @@
                     <div id="front-box" class="relative border-2 border-dashed border-slate-300 rounded-2xl p-6 w-[200px] h-[600px] flex flex-col items-center justify-center transition-all duration-300 overflow-hidden bg-white hover:border-teal-400">
                         <img id="front-preview" class="absolute inset-0 w-full h-full object-contain hidden z-10 bg-black" />
                         <div id="front-placeholder" class="flex flex-col items-center w-full h-full relative z-0">
+                            <!-- front.png 복구 -->
                             <img src="front.png" class="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none" onerror="this.style.display='none'">
                             <div class="z-10 flex flex-col items-center justify-center h-full gap-4 w-full">
                                 <div class="text-center bg-white/80 p-3 rounded-xl backdrop-blur-sm shadow-sm w-full"><span class="font-bold text-slate-700 block">정면 사진</span><span class="text-xs text-slate-500">어깨 라인이 보이게<br/>차렷 자세</span></div>
@@ -82,6 +83,7 @@
                     <div id="side-box" class="relative border-2 border-dashed border-slate-300 rounded-2xl p-6 w-[200px] h-[600px] flex flex-col items-center justify-center transition-all duration-300 overflow-hidden bg-white hover:border-teal-400">
                         <img id="side-preview" class="absolute inset-0 w-full h-full object-contain hidden z-10 bg-black" />
                         <div id="side-placeholder" class="flex flex-col items-center w-full h-full relative z-0">
+                            <!-- side.png 복구 -->
                             <img src="side.png" class="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none" onerror="this.style.display='none'">
                             <div class="z-10 flex flex-col items-center justify-center h-full gap-4 w-full">
                                 <div class="text-center bg-white/80 p-3 rounded-xl backdrop-blur-sm shadow-sm w-full"><span class="font-bold text-slate-700 block">측면 사진</span><span class="text-xs text-slate-500">귀와 어깨가<br/>잘 보이도록 촬영</span></div>
@@ -110,7 +112,8 @@
                     <p class="text-slate-500 text-xs">남양주도시공사 AI Posture Clinic</p>
                     <p class="text-xs text-teal-600 font-bold bg-teal-50 inline-block px-3 py-1 rounded-full mt-2">👇 운동 카드를 누르면 영상이 재생됩니다</p>
                 </div>
-                <div class="grid grid-cols-2 gap-4 mb-8">
+                <!-- 결과 이미지 그리드 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                     <div class="relative"><span class="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-md z-10">정면 (어깨)</span><canvas id="front-canvas" class="w-full h-auto rounded-lg border border-slate-200 bg-black"></canvas></div>
                     <div class="relative"><span class="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-md z-10">측면 (목)</span><canvas id="side-canvas" class="w-full h-auto rounded-lg border border-slate-200 bg-black"></canvas></div>
                 </div>
@@ -315,10 +318,22 @@
                     canvas.height = img.height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0);
+
+                    // --- [기능 추가] 고해상도 대응 스케일 계산 ---
+                    // 이미지 긴 쪽 기준으로 스케일링 (기본 1000px 기준)
+                    const scaleFactor = Math.max(img.width, img.height) / 1000;
+                    // 최소 1배율은 유지
+                    const finalScale = Math.max(1, scaleFactor);
+
                     const onResults = (res) => {
                         if (res.poseLandmarks) {
-                            drawConnectors(ctx, res.poseLandmarks, POSE_CONNECTIONS, {color: 'rgba(0, 255, 0, 0.5)', lineWidth: 4});
-                            drawDiagnosticLines(ctx, res.poseLandmarks, type);
+                            // 스케일 적용하여 연결선 그리기
+                            drawConnectors(ctx, res.poseLandmarks, POSE_CONNECTIONS, {
+                                color: 'rgba(0, 255, 0, 0.5)', 
+                                lineWidth: 4 * finalScale // 스케일 적용
+                            });
+                            // 스케일 값 전달
+                            drawDiagnosticLines(ctx, res.poseLandmarks, type, finalScale);
                         }
                         resolve(res.poseLandmarks);
                     };
@@ -340,10 +355,21 @@
             return Math.atan2(dy, dx) * (180 / Math.PI);
         }
 
-        function drawDiagnosticLines(ctx, landmarks, type) {
+        // --- [기능 수정] 스케일 인자 추가 및 적용 ---
+        function drawDiagnosticLines(ctx, landmarks, type, scale) {
             ctx.save();
-            ctx.lineWidth = 8;
-            ctx.font = "bold 20px Arial";
+            
+            // 해상도에 따른 동적 크기 조절
+            const lineWidth = 8 * scale;
+            const fontSize = 20 * scale;
+            const circleRadius = 10 * scale;
+            const dashSize = 5 * scale;
+            const offset = 60 * scale; // 측면 귀-어깨 수직선 길이 오프셋
+            const textOffset = 20 * scale;
+
+            ctx.lineWidth = lineWidth;
+            ctx.font = `bold ${fontSize}px Arial`;
+
             if (type === 'side') {
                 const ear = landmarks[7]; 
                 const shoulder = landmarks[11];
@@ -351,10 +377,12 @@
                 const ey = ear.y * ctx.canvas.height;
                 const sx = shoulder.x * ctx.canvas.width;
                 const sy = shoulder.y * ctx.canvas.height;
-                ctx.beginPath(); ctx.strokeStyle = "#3b82f6"; ctx.setLineDash([5, 5]); ctx.moveTo(sx, sy); ctx.lineTo(sx, ey - 60); ctx.stroke();
+                
+                ctx.beginPath(); ctx.strokeStyle = "#3b82f6"; ctx.setLineDash([dashSize, dashSize]); ctx.moveTo(sx, sy); ctx.lineTo(sx, ey - offset); ctx.stroke();
                 ctx.beginPath(); ctx.setLineDash([]); ctx.strokeStyle = "#ef4444"; ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke();
-                ctx.fillStyle = "#ef4444"; ctx.beginPath(); ctx.arc(ex, ey, 10, 0, 2*Math.PI); ctx.fill();
-                ctx.fillStyle = "#3b82f6"; ctx.beginPath(); ctx.arc(sx, sy, 10, 0, 2*Math.PI); ctx.fill();
+                
+                ctx.fillStyle = "#ef4444"; ctx.beginPath(); ctx.arc(ex, ey, circleRadius, 0, 2*Math.PI); ctx.fill();
+                ctx.fillStyle = "#3b82f6"; ctx.beginPath(); ctx.arc(sx, sy, circleRadius, 0, 2*Math.PI); ctx.fill();
             } else {
                 const l = landmarks[11];
                 const r = landmarks[12];
@@ -362,9 +390,10 @@
                 const ly = l.y * ctx.canvas.height;
                 const rx = r.x * ctx.canvas.width;
                 const ry = r.y * ctx.canvas.height;
+                
                 ctx.beginPath(); ctx.strokeStyle = "#ef4444"; ctx.setLineDash([]); ctx.moveTo(lx, ly); ctx.lineTo(rx, ry); ctx.stroke();
                 const highY = Math.min(ly, ry);
-                ctx.beginPath(); ctx.strokeStyle = "#3b82f6"; ctx.setLineDash([5, 5]); ctx.moveTo(lx - 20, highY); ctx.lineTo(rx + 20, highY); ctx.stroke();
+                ctx.beginPath(); ctx.strokeStyle = "#3b82f6"; ctx.setLineDash([dashSize, dashSize]); ctx.moveTo(lx - textOffset, highY); ctx.lineTo(rx + textOffset, highY); ctx.stroke();
             }
             ctx.restore();
         }
