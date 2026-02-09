@@ -5,17 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AI Posture Clinic - 남양주도시공사</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Phosphor Icons -->
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
-    <!-- MediaPipe Pose -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
     
-    <!-- html2canvas -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
     <style>
@@ -61,12 +57,11 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 justify-items-center">
-                <!-- 정면 업로드 -->
+                <!-- 정면사진  업로드 기능 구현 -->
                 <div class="flex flex-col gap-2 w-[200px]">
                     <div id="front-box" class="relative border-2 border-dashed border-slate-300 rounded-2xl p-6 w-[200px] h-[600px] flex flex-col items-center justify-center transition-all duration-300 overflow-hidden bg-white hover:border-teal-400">
                         <img id="front-preview" class="absolute inset-0 w-full h-full object-contain hidden z-10 bg-black" />
                         <div id="front-placeholder" class="flex flex-col items-center w-full h-full relative z-0">
-                            <!-- front.png 복구 -->
                             <img src="front.png" class="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none" onerror="this.style.display='none'">
                             <div class="z-10 flex flex-col items-center justify-center h-full gap-4 w-full">
                                 <div class="text-center bg-white/80 p-3 rounded-xl backdrop-blur-sm shadow-sm w-full"><span class="font-bold text-slate-700 block">정면 사진</span><span class="text-xs text-slate-500">어깨 라인이 보이게<br/>차렷 자세</span></div>
@@ -78,12 +73,11 @@
                         <button id="front-reset-btn" class="hidden absolute top-2 right-2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors z-20"><i class="ph ph-arrows-clockwise text-lg"></i></button>
                     </div>
                 </div>
-                <!-- 측면 업로드 -->
+                <!-- 측면사진 업로드 기능 구현 -->
                 <div class="flex flex-col gap-2 w-[200px]">
                     <div id="side-box" class="relative border-2 border-dashed border-slate-300 rounded-2xl p-6 w-[200px] h-[600px] flex flex-col items-center justify-center transition-all duration-300 overflow-hidden bg-white hover:border-teal-400">
                         <img id="side-preview" class="absolute inset-0 w-full h-full object-contain hidden z-10 bg-black" />
                         <div id="side-placeholder" class="flex flex-col items-center w-full h-full relative z-0">
-                            <!-- side.png 복구 -->
                             <img src="side.png" class="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none" onerror="this.style.display='none'">
                             <div class="z-10 flex flex-col items-center justify-center h-full gap-4 w-full">
                                 <div class="text-center bg-white/80 p-3 rounded-xl backdrop-blur-sm shadow-sm w-full"><span class="font-bold text-slate-700 block">측면 사진</span><span class="text-xs text-slate-500">귀와 어깨가<br/>잘 보이도록 촬영</span></div>
@@ -105,14 +99,14 @@
         </div>
 
         <div id="result-view" class="space-y-6 hidden fade-in">
-            <!-- 캡처 대상 영역 -->
+            <!-- 캡처 대상 영역  -->
             <div id="capture-target" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                 <div class="text-center space-y-2 mb-6">
                     <h2 class="text-2xl font-bold text-slate-900">분석 결과 리포트</h2>
                     <p class="text-slate-500 text-xs">남양주도시공사 AI Posture Clinic</p>
                     <p class="text-xs text-teal-600 font-bold bg-teal-50 inline-block px-3 py-1 rounded-full mt-2">👇 운동 카드를 누르면 영상이 재생됩니다</p>
                 </div>
-                <!-- 결과 이미지 그리드 -->
+                <!-- 결과 이미지 그리드로 -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                     <div class="relative"><span class="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-md z-10">정면 (어깨)</span><canvas id="front-canvas" class="w-full h-auto rounded-lg border border-slate-200 bg-black"></canvas></div>
                     <div class="relative"><span class="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-md z-10">측면 (목)</span><canvas id="side-canvas" class="w-full h-auto rounded-lg border border-slate-200 bg-black"></canvas></div>
@@ -130,15 +124,15 @@
 
     <footer class="mt-12 text-center text-slate-400 text-sm pb-8">&copy; 2026 남양주도시공사 전략기획부 AI Posture Clinic.</footer>
 
-    <!-- 설문조사 플로팅 버튼 (수정됨: 텍스트 및 색상 변경) -->
+    <!-- 설문조사 플로팅 버튼  텍스트 및 색상으로 변경 완료) -->
     <button onclick="goToSurvey()" class="fixed bottom-6 right-6 bg-orange-500 hover:bg-orange-600 text-white px-6 py-4 rounded-full shadow-2xl transition-all z-40 flex items-center justify-center group hover:scale-105 active:scale-95 font-bold text-lg animate-bounce">
         설문조사
     </button>
 
-    <!-- 1. 이탈 감지 모달 -->
+    <!-- 1. 이탈 감지 모달 기능 추가-->
     <div id="exit-modal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 hidden pop-in"><div class="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl relative"><button onclick="closeModal('exit-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="ph ph-x text-2xl"></i></button><div class="text-center"><div class="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ph ph-gift text-3xl text-teal-600"></i></div><h3 class="text-xl font-bold text-slate-900 mb-2">잠시만요! 👋</h3><p class="text-slate-500 mb-6 text-sm break-keep">분석 결과가 도움이 되셨나요?<br/>간단한 설문조사에 참여해주시면<br/>더 좋은 서비스를 만드는 데 큰 힘이 됩니다.</p><div class="flex flex-col gap-3"><button onclick="goToSurvey()" class="w-full bg-teal-600 text-white py-3 rounded-xl font-bold hover:bg-teal-700 transition-colors shadow-lg shadow-teal-200">네, 참여할게요!</button><button onclick="closeModal('exit-modal')" class="w-full text-slate-400 hover:text-slate-600 text-sm py-2">괜찮습니다, 다음에 할게요.</button></div></div></div></div>
 
-    <!-- 2. 의료 경고 모달 -->
+    <!-- 2. 의료 경고 모달 기능 추가(헬스트레이너 의견 반영) -->
     <div id="medical-warning-modal" class="fixed inset-0 z-[60] modal-backdrop flex items-center justify-center p-4 hidden pop-in">
         <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl relative border-2 border-red-100">
             <div class="text-center">
@@ -150,7 +144,7 @@
         </div>
     </div>
 
-    <!-- 3. 비디오 모달 -->
+    <!-- 3. 비디오 모달(생성형 AI 제작 영상 삽입) -->
     <div id="video-modal" class="fixed inset-0 z-[70] modal-backdrop flex items-center justify-center p-4 hidden"><div class="bg-black w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl relative animate-pop"><div class="p-4 flex justify-between items-center text-white bg-gray-900"><h3 id="video-title" class="font-bold text-lg">운동 가이드</h3><button onclick="closeVideoModal()" class="text-gray-300 hover:text-white"><i class="ph ph-x text-2xl"></i></button></div><div class="video-container"><iframe id="video-frame" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><div class="p-3 bg-gray-900 text-center border-t border-gray-800"><a id="video-link" href="#" target="_blank" class="inline-flex items-center gap-2 text-sm text-teal-400 hover:text-teal-300 transition-colors"><i class="ph ph-arrow-square-out"></i> 영상이 재생되지 않나요? YouTube에서 직접 보기</a></div></div></div>
 
     <script>
@@ -208,7 +202,7 @@
             }
         };
         
-        // --- [기능 추가] 뒤로가기 제어 로직 (팝업, 비디오) ---
+        // --- 기능 추가, 뒤로가기 제어 로직 (팝업, 비디오) ---
         window.onpopstate = function(event) {
             // 1. 비디오 모달이 열려있는 경우 -> 비디오만 닫음
             if (!videoModal.classList.contains('hidden')) {
@@ -219,7 +213,7 @@
 
             // 2. 결과 화면에서 뒤로가기를 누른 경우 -> 설문조사 이탈 모달 표시
             if (!resultView.classList.contains('hidden')) {
-                // 이미 설문 모달이 떠있지 않다면
+                // 이미 설문 모달이 떠있지 않다면?...
                 if (exitModal.classList.contains('hidden')) {
                     showModal();
                     // 뒤로가기로 페이지를 이탈하는 것을 막기 위해 다시 상태 푸시
@@ -312,7 +306,7 @@
             resultView.classList.remove('hidden'); 
             window.scrollTo({ top: 0, behavior: 'smooth' });
             
-            // --- [기능 추가] 결과 화면 진입 시 히스토리 상태 추가 (뒤로가기 캡처용)
+            // --- [기능 추가] 결과 화면 진입 시 히스토리 상태 추가 (뒤로가기 캡처용, 가상 프레임 생성 방식)
             history.pushState({ page: 'result' }, '', '');
         }
 
@@ -492,7 +486,7 @@
 
         // --- [기능 수정] 비디오 모달 닫기 로직 (X버튼 클릭 시 뒤로가기 실행)
         function closeVideoModal() {
-            // 히스토리 상태가 비디오라면 뒤로가기를 실행하여 popstate 이벤트 트리거
+            // 히스토리 상태가 비디오라면 뒤로가기를 실행하여 pop 이벤트 트리거
             if (history.state && history.state.modal === 'video') {
                 history.back(); 
             } else {
@@ -508,7 +502,7 @@
         function goToSurvey() { window.location.href = SURVEY_URL; }
         
         function initExitIntent() {
-            // 데스크탑용 마우스 이탈 감지 유지
+            // 데스크탑용 마우스 이탈 감지 유지 살려놓기
             document.addEventListener('mouseleave', (e) => { 
                 if (e.clientY <= 0 && !hasShownExitModal && !resultView.classList.contains('hidden')) { 
                     showModal(); 
@@ -518,4 +512,5 @@
         function showModal() { hasShownExitModal = true; exitModal.classList.remove('hidden'); }
     </script>
 </body>
+
 </html>
